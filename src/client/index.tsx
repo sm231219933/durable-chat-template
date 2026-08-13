@@ -22,7 +22,7 @@ const USER_KEY = "stranger-chat-user";
    HELPERS
 ========================================================= */
 
-function avatarEmoji(avatar: string, gender: Gender) {
+function avatarEmoji(avatar: string, gender: Gender): string {
   if (avatar.includes("2")) {
     if (gender === "female") return "👩🏻";
     if (gender === "male") return "👨🏻";
@@ -47,13 +47,13 @@ function avatarEmoji(avatar: string, gender: Gender) {
   return "🧑";
 }
 
-function genderColor(gender: Gender) {
+function genderColor(gender: Gender): string {
   if (gender === "female") return "female";
   if (gender === "male") return "male";
   return "neutral";
 }
 
-function flag(country: string) {
+function flag(country: string): string {
   const flags: Record<string, string> = {
     India: "🇮🇳",
     "United States": "🇺🇸",
@@ -110,7 +110,7 @@ function flag(country: string) {
   return flags[country] || "🌎";
 }
 
-function saveUser(user: UserProfile) {
+function saveUser(user: UserProfile): void {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
@@ -143,7 +143,9 @@ async function api<T>(
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || "Something went wrong");
+    throw new Error(
+      data.error || "Something went wrong",
+    );
   }
 
   return data as T;
@@ -162,8 +164,11 @@ function Avatar({
 }) {
   const colorClass = genderColor(user.gender);
 
-  const avatarClass =
-    `avatar avatar-${colorClass} avatar-${size}`;
+  const avatarClass = [
+    "avatar",
+    `avatar-${colorClass}`,
+    `avatar-${size}`,
+  ].join(" ");
 
   const emoji = avatarEmoji(
     user.avatar,
@@ -174,6 +179,7 @@ function Avatar({
     <div
       className={avatarClass}
       title={user.gender}
+      aria-label={`${user.gender} avatar`}
     >
       {emoji}
     </div>
@@ -214,11 +220,18 @@ function ProfileScreen({
   onComplete: (user: UserProfile) => void;
 }) {
   const [mode, setMode] =
-    useState<"guest" | "login" | "signup">("guest");
+    useState<"guest" | "login" | "signup">(
+      "guest",
+    );
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [age, setAge] = useState("");
+  const [username, setUsername] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [age, setAge] =
+    useState("");
 
   const [country, setCountry] =
     useState("India");
@@ -239,33 +252,30 @@ function ProfileScreen({
     useState(false);
 
   const selectedAvatars = useMemo(() => {
-    return avatarOptions.filter((item) => {
-      if (gender === "female") {
-        return item.startsWith("female");
-      }
+    return avatarOptions.filter(
+      (item) => {
+        if (gender === "female") {
+          return item.startsWith("female");
+        }
 
-      if (gender === "male") {
-        return item.startsWith("male");
-      }
+        if (gender === "male") {
+          return item.startsWith("male");
+        }
 
-      return item.startsWith("neutral");
-    });
+        return item.startsWith("neutral");
+      },
+    );
   }, [gender]);
 
-  /*
-   * IMPORTANT:
-   * Avatar ko gender change hone par automatically reset
-   * nahi kar rahe.
-   *
-   * Pehle yahan useEffect tha jo har gender change par
-   * selected avatar ko first avatar bana deta tha.
-   *
-   * Ab user jo avatar select karega wahi selected rahega.
-   */
+  useEffect(() => {
+    setAvatar(
+      selectedAvatars[0] || "neutral-1",
+    );
+  }, [selectedAvatars]);
 
-  /* -------------------------
+  /* =======================================================
      GUEST
-  ------------------------- */
+  ======================================================= */
 
   async function guest() {
     setError("");
@@ -311,7 +321,6 @@ function ProfileScreen({
         );
 
       saveUser(result.user);
-
       onComplete(result.user);
     } catch (err) {
       setError(
@@ -324,9 +333,9 @@ function ProfileScreen({
     }
   }
 
-  /* -------------------------
+  /* =======================================================
      SIGNUP
-  ------------------------- */
+  ======================================================= */
 
   async function signup() {
     setError("");
@@ -382,7 +391,6 @@ function ProfileScreen({
         );
 
       saveUser(result.user);
-
       onComplete(result.user);
     } catch (err) {
       setError(
@@ -395,9 +403,9 @@ function ProfileScreen({
     }
   }
 
-  /* -------------------------
+  /* =======================================================
      LOGIN
-  ------------------------- */
+  ======================================================= */
 
   async function login() {
     setError("");
@@ -429,7 +437,6 @@ function ProfileScreen({
         );
 
       saveUser(result.user);
-
       onComplete(result.user);
     } catch (err) {
       setError(
@@ -474,7 +481,9 @@ function ProfileScreen({
             <input
               value={username}
               onChange={(e) =>
-                setUsername(e.target.value)
+                setUsername(
+                  e.target.value,
+                )
               }
               placeholder="Your username"
               autoComplete="username"
@@ -487,7 +496,9 @@ function ProfileScreen({
             <input
               value={password}
               onChange={(e) =>
-                setPassword(e.target.value)
+                setPassword(
+                  e.target.value,
+                )
               }
               type="password"
               placeholder="Your password"
@@ -511,6 +522,7 @@ function ProfileScreen({
             </button>
 
             <button
+              type="button"
               className="text-button"
               onClick={() =>
                 setMode("signup")
@@ -520,6 +532,7 @@ function ProfileScreen({
             </button>
 
             <button
+              type="button"
               className="text-button"
               onClick={() =>
                 setMode("guest")
@@ -544,6 +557,7 @@ function ProfileScreen({
 
         <div className="top-actions">
           <button
+            type="button"
             className="outline-button"
             onClick={() =>
               setMode("login")
@@ -553,6 +567,7 @@ function ProfileScreen({
           </button>
 
           <button
+            type="button"
             className="small-primary"
             onClick={() =>
               setMode("signup")
@@ -600,7 +615,9 @@ function ProfileScreen({
                   <input
                     value={age}
                     onChange={(e) =>
-                      setAge(e.target.value)
+                      setAge(
+                        e.target.value,
+                      )
                     }
                     type="number"
                     min="13"
@@ -617,7 +634,9 @@ function ProfileScreen({
                   <select
                     value={country}
                     onChange={(e) =>
-                      setCountry(e.target.value)
+                      setCountry(
+                        e.target.value,
+                      )
                     }
                   >
                     {countries.map(
@@ -641,7 +660,9 @@ function ProfileScreen({
               <select
                 value={state}
                 onChange={(e) =>
-                  setState(e.target.value)
+                  setState(
+                    e.target.value,
+                  )
                 }
               >
                 {states.map(
@@ -661,62 +682,44 @@ function ProfileScreen({
               </label>
 
               <div className="gender-grid">
-                {genders.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    className={`gender-choice ${
-                      gender === item.value
-                        ? "selected"
-                        : ""
-                    } ${genderColor(
-                      item.value,
-                    )}`}
-                    onClick={() => {
-                      setGender(item.value);
+                {genders.map(
+                  (item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      className={[
+                        "gender-choice",
+                        gender ===
+                        item.value
+                          ? "selected"
+                          : "",
+                        genderColor(
+                          item.value,
+                        ),
+                      ].join(" ")}
+                      onClick={() =>
+                        setGender(
+                          item.value,
+                        )
+                      }
+                    >
+                      <span>
+                        {item.value ===
+                        "female"
+                          ? "👩"
+                          : item.value ===
+                              "male"
+                            ? "👨"
+                            : "🧑"}
+                      </span>
 
-                      /*
-                       * Gender change hone par valid avatar
-                       * automatically select kar rahe hain.
-                       *
-                       * Isse wrong gender ka avatar save nahi hoga.
-                       */
-                      const firstAvatar =
-                        avatarOptions.find(
-                          (avatarItem) =>
-                            item.value === "female"
-                              ? avatarItem.startsWith("female")
-                              : item.value === "male"
-                                ? avatarItem.startsWith("male")
-                                : avatarItem.startsWith("neutral"),
-                        );
-
-                      setAvatar(
-                        firstAvatar ||
-                          (item.value === "female"
-                            ? "female-1"
-                            : item.value === "male"
-                              ? "male-1"
-                              : "neutral-1"),
-                      );
-                    }}
-                  >
-                    <span>
-                      {item.value ===
-                      "female"
-                        ? "👩"
-                        : item.value ===
-                            "male"
-                          ? "👨"
-                          : "🧑"}
-                    </span>
-
-                    {item.label.replace(
-                      /^[^\s]+\s/,
-                      "",
-                    )}
-                  </button>
-                ))}
+                      {item.label.replace(
+                        /^[^\s]+\s/,
+                        "",
+                      )}
+                    </button>
+                  ),
+                )}
               </div>
 
               <label>
@@ -729,11 +732,12 @@ function ProfileScreen({
                     <button
                       key={item}
                       type="button"
-                      className={`avatar-select ${
+                      className={[
+                        "avatar-select",
                         avatar === item
                           ? "avatar-selected"
-                          : ""
-                      }`}
+                          : "",
+                      ].join(" ")}
                       onClick={() =>
                         setAvatar(item)
                       }
@@ -757,6 +761,7 @@ function ProfileScreen({
               )}
 
               <button
+                type="button"
                 className="primary-button big-button"
                 onClick={guest}
                 disabled={loading}
@@ -801,7 +806,9 @@ function ProfileScreen({
               <input
                 value={username}
                 onChange={(e) =>
-                  setUsername(e.target.value)
+                  setUsername(
+                    e.target.value,
+                  )
                 }
                 placeholder="Unique username"
                 autoComplete="username"
@@ -814,7 +821,9 @@ function ProfileScreen({
               <input
                 value={password}
                 onChange={(e) =>
-                  setPassword(e.target.value)
+                  setPassword(
+                    e.target.value,
+                  )
                 }
                 type="password"
                 placeholder="At least 6 characters"
@@ -830,7 +839,9 @@ function ProfileScreen({
                   <input
                     value={age}
                     onChange={(e) =>
-                      setAge(e.target.value)
+                      setAge(
+                        e.target.value,
+                      )
                     }
                     type="number"
                     min="13"
@@ -847,7 +858,9 @@ function ProfileScreen({
                   <select
                     value={country}
                     onChange={(e) =>
-                      setCountry(e.target.value)
+                      setCountry(
+                        e.target.value,
+                      )
                     }
                   >
                     {countries.map(
@@ -871,7 +884,9 @@ function ProfileScreen({
               <select
                 value={state}
                 onChange={(e) =>
-                  setState(e.target.value)
+                  setState(
+                    e.target.value,
+                  )
                 }
               >
                 {states.map(
@@ -891,56 +906,44 @@ function ProfileScreen({
               </label>
 
               <div className="gender-grid">
-                {genders.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    className={`gender-choice ${
-                      gender === item.value
-                        ? "selected"
-                        : ""
-                    } ${genderColor(
-                      item.value,
-                    )}`}
-                    onClick={() => {
-                      setGender(item.value);
+                {genders.map(
+                  (item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      className={[
+                        "gender-choice",
+                        gender ===
+                        item.value
+                          ? "selected"
+                          : "",
+                        genderColor(
+                          item.value,
+                        ),
+                      ].join(" ")}
+                      onClick={() =>
+                        setGender(
+                          item.value,
+                        )
+                      }
+                    >
+                      <span>
+                        {item.value ===
+                        "female"
+                          ? "👩"
+                          : item.value ===
+                              "male"
+                            ? "👨"
+                            : "🧑"}
+                      </span>
 
-                      const firstAvatar =
-                        avatarOptions.find(
-                          (avatarItem) =>
-                            item.value === "female"
-                              ? avatarItem.startsWith("female")
-                              : item.value === "male"
-                                ? avatarItem.startsWith("male")
-                                : avatarItem.startsWith("neutral"),
-                        );
-
-                      setAvatar(
-                        firstAvatar ||
-                          (item.value === "female"
-                            ? "female-1"
-                            : item.value === "male"
-                              ? "male-1"
-                              : "neutral-1"),
-                      );
-                    }}
-                  >
-                    <span>
-                      {item.value ===
-                      "female"
-                        ? "👩"
-                        : item.value ===
-                            "male"
-                          ? "👨"
-                          : "🧑"}
-                    </span>
-
-                    {item.label.replace(
-                      /^[^\s]+\s/,
-                      "",
-                    )}
-                  </button>
-                ))}
+                      {item.label.replace(
+                        /^[^\s]+\s/,
+                        "",
+                      )}
+                    </button>
+                  ),
+                )}
               </div>
 
               <label>
@@ -953,11 +956,12 @@ function ProfileScreen({
                     <button
                       key={item}
                       type="button"
-                      className={`avatar-select ${
+                      className={[
+                        "avatar-select",
                         avatar === item
                           ? "avatar-selected"
-                          : ""
-                      }`}
+                          : "",
+                      ].join(" ")}
                       onClick={() =>
                         setAvatar(item)
                       }
@@ -981,6 +985,7 @@ function ProfileScreen({
               )}
 
               <button
+                type="button"
                 className="primary-button big-button"
                 onClick={signup}
                 disabled={loading}
@@ -998,6 +1003,7 @@ function ProfileScreen({
                 }
               >
                 Already have an account?
+                {" "}
                 Login
               </button>
             </>
@@ -1039,7 +1045,6 @@ function UserCard({
       <div className="user-info">
         <div className="user-name">
           {user.username}
-
           <span className="online-dot" />
         </div>
 
@@ -1095,7 +1100,9 @@ function UsersScreen({
     useState("");
 
   const [selectedUser, setSelectedUser] =
-    useState<UserProfile | null>(null);
+    useState<UserProfile | null>(
+      null,
+    );
 
   const [showProfile, setShowProfile] =
     useState(false);
@@ -1173,8 +1180,7 @@ function UsersScreen({
   const visibleUsers =
     users.filter(
       (user) =>
-        user.id !==
-        currentUser.id,
+        user.id !== currentUser.id,
     );
 
   return (
@@ -1216,8 +1222,8 @@ function UsersScreen({
               </div>
 
               <div className="profile-detail">
-                {currentUser.age} years
-                {" • "}
+                {currentUser.age}
+                {" years • "}
                 {flag(
                   currentUser.country,
                 )}
@@ -1497,17 +1503,16 @@ function ChatScreen({
     });
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView(
-      {
-        behavior: "smooth",
-      },
-    );
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
   }, [messages]);
 
   useEffect(() => {
     return () => {
       if (
-        typingTimer.current
+        typingTimer.current !==
+        null
       ) {
         window.clearTimeout(
           typingTimer.current,
@@ -1533,7 +1538,8 @@ function ChatScreen({
     );
 
     if (
-      typingTimer.current
+      typingTimer.current !==
+      null
     ) {
       window.clearTimeout(
         typingTimer.current,
@@ -1569,18 +1575,17 @@ function ChatScreen({
       return;
     }
 
-    const message: ChatMessage =
-      {
-        id: nanoid(12),
-        content,
-        user:
-          currentUser.username,
-        role: "user",
-        senderId:
-          currentUser.id,
-        createdAt:
-          Date.now(),
-      };
+    const message: ChatMessage = {
+      id: nanoid(12),
+      content,
+      user:
+        currentUser.username,
+      role: "user",
+      senderId:
+        currentUser.id,
+      createdAt:
+        Date.now(),
+    };
 
     setMessages(
       (old) => [
@@ -1666,7 +1671,7 @@ function ChatScreen({
           <span>
             <span className="online-dot" />
 
-            Online •{" "}
+            {"Online • "}
             {otherUser.age}
             {" • "}
             {flag(
@@ -1722,11 +1727,12 @@ function ChatScreen({
             return (
               <div
                 key={message.id}
-                className={`message-row ${
+                className={[
+                  "message-row",
                   mine
                     ? "mine"
-                    : "theirs"
-                }`}
+                    : "theirs",
+                ].join(" ")}
               >
                 {!mine && (
                   <Avatar
@@ -1736,11 +1742,12 @@ function ChatScreen({
                 )}
 
                 <div
-                  className={`bubble ${
+                  className={[
+                    "bubble",
                     mine
                       ? "mine"
-                      : "theirs"
-                  }`}
+                      : "theirs",
+                  ].join(" ")}
                 >
                   {message.image && (
                     <img
@@ -1787,9 +1794,7 @@ function ChatScreen({
           </div>
         )}
 
-        <div
-          ref={bottomRef}
-        />
+        <div ref={bottomRef} />
       </main>
 
       {blocked ? (
@@ -1880,9 +1885,7 @@ function App() {
 ========================================================= */
 
 const rootElement =
-  document.getElementById(
-    "root",
-  );
+  document.getElementById("root");
 
 if (!rootElement) {
   throw new Error(
@@ -1890,9 +1893,7 @@ if (!rootElement) {
   );
 }
 
-createRoot(
-  rootElement,
-).render(
+createRoot(rootElement).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
