@@ -1,3 +1,4 @@
+```json
 {
   "compatibility_date": "2025-10-08",
   "main": "src/server/index.ts",
@@ -34,7 +35,7 @@
   },
 
   "build": {
-    "command": "esbuild src/client/index.tsx --bundle --splitting --format=esm --platform=browser --outdir=public/dist"
+    "command": "npm run build"
   },
 
   "observability": {
@@ -43,3 +44,4 @@
 
   "upload_source_maps": true
 }
+```
