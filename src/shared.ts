@@ -1,4 +1,4 @@
-export type Gender = "male" | "female" | "neutral";
+export type Gender = "female" | "male" | "neutral";
 
 export type UserProfile = {
   id: string;
@@ -8,7 +8,6 @@ export type UserProfile = {
   state: string;
   gender: Gender;
   avatar: string;
-  last_seen?: number;
 };
 
 export type ChatMessage = {
@@ -51,19 +50,37 @@ export type Message =
       userId: string;
       username: string;
       typing: boolean;
-    }
-  | {
-      type: "user_joined";
-      user: UserProfile;
-    }
-  | {
-      type: "user_left";
-      userId: string;
-    }
-  | {
-      type: "blocked";
-      userId: string;
     };
+
+export const countries = [
+  "India",
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "Germany",
+  "France",
+  "Japan",
+  "Brazil",
+  "Other",
+];
+
+export const states = [
+  "Madhya Pradesh",
+  "Delhi",
+  "Maharashtra",
+  "Rajasthan",
+  "Gujarat",
+  "Uttar Pradesh",
+  "Karnataka",
+  "West Bengal",
+  "Tamil Nadu",
+  "Bihar",
+  "Punjab",
+  "Haryana",
+  "Kerala",
+  "Other",
+];
 
 export const genders: {
   value: Gender;
@@ -81,28 +98,6 @@ export const genders: {
     value: "neutral",
     label: "🧑 Neutral",
   },
-];
-
-export const countries = [
-  "India",
-  "United States",
-  "United Kingdom",
-  "Canada",
-  "Australia",
-  "Other",
-];
-
-export const states = [
-  "Madhya Pradesh",
-  "Delhi",
-  "Maharashtra",
-  "Rajasthan",
-  "Gujarat",
-  "Uttar Pradesh",
-  "Karnataka",
-  "West Bengal",
-  "Tamil Nadu",
-  "Other",
 ];
 
 export const avatarOptions = [
