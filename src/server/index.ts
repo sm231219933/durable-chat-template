@@ -5,76 +5,127 @@ import {
 	routePartykitRequest,
 } from "partyserver";
 
-import type { ChatMessage, Message } from "../shared";
+import type { ChatMessage, Message, UserProfile } from "../shared";
 
 export class Chat extends Server<Env> {
 	static options = { hibernate: true };
 
-	messages = [] as ChatMessage[];
-
-	broadcastMessage(message: Message, exclude?: string[]) {
-		this.broadcast(JSON.stringify(message), exclude);
-	}
+	messages: ChatMessage[] = [];
+	users: UserProfile[] = [];
 
 	onStart() {
-		// this is where you can initialize things that need to be done before the server starts
-		// for example, load previous messages from a database or a service
+		this.ctx.storage.sql.exec(`
+			CREATE TABLE IF NOT EXISTS messages (
+				id TEXT PRIMARY KEY,
+				senderId TEXT NOT NULL,
+				receiverId TEXT NOT NULL,
+				content TEXT NOT NULL,
+				timestamp INTEGER NOT NULL
+			)
+		`);
 
-		// create the messages table if it doesn't exist
-		this.ctx.storage.sql.exec(
-			`CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, user TEXT, role TEXT, content TEXT)`,
-		);
+		this.ctx.storage.sql.exec(`
+			CREATE TABLE IF NOT EXISTS users (
+				id TEXT PRIMARY KEY,
+				username TEXT UNIQUE NOT NULL,
+				age INTEGER NOT NULL,
+				country TEXT NOT NULL,
+				state TEXT NOT NULL,
+				gender TEXT NOT NULL,
+				avatar TEXT NOT NULL,
+				online INTEGER NOT NULL DEFAULT 0
+			)
+		`);
 
-		// load the messages from the database
 		this.messages = this.ctx.storage.sql
-			.exec(`SELECT * FROM messages`)
+			.exec(`SELECT * FROM messages ORDER BY timestamp ASC`)
 			.toArray() as ChatMessage[];
+
+		this.users = this.ctx.storage.sql
+			.exec(`SELECT * FROM users`)
+			.toArray()
+			.map((user) => ({
+				...user,
+				online: Boolean(user.online),
+			})) as UserProfile[];
 	}
 
 	onConnect(connection: Connection) {
 		connection.send(
 			JSON.stringify({
-				type: "all",
+				type: "history",
 				messages: this.messages,
+			} satisfies Message),
+		);
+
+		connection.send(
+			JSON.stringify({
+				type: "users",
+				users: this.users,
 			} satisfies Message),
 		);
 	}
 
-	saveMessage(message: ChatMessage) {
-		// check if the message already exists
-		const existingMessage = this.messages.find((m) => m.id === message.id);
-		if (existingMessage) {
-			this.messages = this.messages.map((m) => {
-				if (m.id === message.id) {
-					return message;
-				}
-				return m;
-			});
-		} else {
-			this.messages.push(message);
-		}
+	onMessage(connection: Connection, message: WSMessage) {
+		try {
+			const parsed = JSON.parse(message as string) as Message;
 
-		// Use parameterized queries to prevent SQL injection
-		this.ctx.storage.sql.exec(
-			`INSERT INTO messages (id, user, role, content) VALUES (?, ?, ?, ?)
-			 ON CONFLICT (id) DO UPDATE SET content = ?`,
-			message.id,
-			message.user,
-			message.role,
-			message.content,
-			message.content,
-		);
+			if (parsed.type === "chat") {
+				this.saveMessage(parsed.message);
+
+				this.broadcast(
+					JSON.stringify(parsed),
+				);
+
+				return;
+			}
+
+			if (parsed.type === "users") {
+				this.users = parsed.users;
+
+				this.ctx.storage.sql.exec(`DELETE FROM users`);
+
+				for (const user of this.users) {
+					this.ctx.storage.sql.exec(
+						`INSERT INTO users
+						(id, username, age, country, state, gender, avatar, online)
+						VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+						user.id,
+						user.username,
+						user.age,
+						user.country,
+						user.state,
+						user.gender,
+						user.avatar,
+						user.online ? 1 : 0,
+					);
+				}
+
+				this.broadcast(JSON.stringify(parsed));
+			}
+		} catch {
+			connection.send(
+				JSON.stringify({
+					type: "error",
+					message: "Invalid message.",
+				} satisfies Message),
+			);
+		}
 	}
 
-	onMessage(connection: Connection, message: WSMessage) {
-		// let's broadcast the raw message to everyone else
-		this.broadcast(message);
+	saveMessage(message: ChatMessage) {
+		this.messages.push(message);
 
-		// let's update our local messages store
-		const parsed = JSON.parse(message as string) as Message;
-		if (parsed.type === "add" || parsed.type === "update") {
-			this.saveMessage(parsed);
-		}
+		this.ctx.storage.sql.exec(
+			`INSERT INTO messages
+			(id, senderId, receiverId, content, timestamp)
+			VALUES (?, ?, ?, ?, ?)`,
+			message.id,
+			message.senderId,
+			message.receiverId,
+			message.content,
+			message.timestamp,
+		);
 	}
 }
 
