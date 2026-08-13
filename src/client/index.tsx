@@ -50,7 +50,6 @@ function avatarEmoji(avatar: string, gender: Gender) {
 function genderColor(gender: Gender) {
   if (gender === "female") return "female";
   if (gender === "male") return "male";
-
   return "neutral";
 }
 
@@ -253,11 +252,16 @@ function ProfileScreen({
     });
   }, [gender]);
 
-  useEffect(() => {
-    setAvatar(
-      selectedAvatars[0] || "neutral-1",
-    );
-  }, [selectedAvatars]);
+  /*
+   * IMPORTANT:
+   * Avatar ko gender change hone par automatically reset
+   * nahi kar rahe.
+   *
+   * Pehle yahan useEffect tha jo har gender change par
+   * selected avatar ko first avatar bana deta tha.
+   *
+   * Ab user jo avatar select karega wahi selected rahega.
+   */
 
   /* -------------------------
      GUEST
@@ -668,9 +672,34 @@ function ProfileScreen({
                     } ${genderColor(
                       item.value,
                     )}`}
-                    onClick={() =>
-                      setGender(item.value)
-                    }
+                    onClick={() => {
+                      setGender(item.value);
+
+                      /*
+                       * Gender change hone par valid avatar
+                       * automatically select kar rahe hain.
+                       *
+                       * Isse wrong gender ka avatar save nahi hoga.
+                       */
+                      const firstAvatar =
+                        avatarOptions.find(
+                          (avatarItem) =>
+                            item.value === "female"
+                              ? avatarItem.startsWith("female")
+                              : item.value === "male"
+                                ? avatarItem.startsWith("male")
+                                : avatarItem.startsWith("neutral"),
+                        );
+
+                      setAvatar(
+                        firstAvatar ||
+                          (item.value === "female"
+                            ? "female-1"
+                            : item.value === "male"
+                              ? "male-1"
+                              : "neutral-1"),
+                      );
+                    }}
                   >
                     <span>
                       {item.value ===
@@ -873,9 +902,28 @@ function ProfileScreen({
                     } ${genderColor(
                       item.value,
                     )}`}
-                    onClick={() =>
-                      setGender(item.value)
-                    }
+                    onClick={() => {
+                      setGender(item.value);
+
+                      const firstAvatar =
+                        avatarOptions.find(
+                          (avatarItem) =>
+                            item.value === "female"
+                              ? avatarItem.startsWith("female")
+                              : item.value === "male"
+                                ? avatarItem.startsWith("male")
+                                : avatarItem.startsWith("neutral"),
+                        );
+
+                      setAvatar(
+                        firstAvatar ||
+                          (item.value === "female"
+                            ? "female-1"
+                            : item.value === "male"
+                              ? "male-1"
+                              : "neutral-1"),
+                      );
+                    }}
                   >
                     <span>
                       {item.value ===
