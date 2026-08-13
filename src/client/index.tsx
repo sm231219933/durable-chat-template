@@ -141,7 +141,9 @@ async function api<T>(
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || "Something went wrong");
+    throw new Error(
+      data.error || "Something went wrong",
+    );
   }
 
   return data;
@@ -190,22 +192,25 @@ function ProfileScreen({
   onComplete: (user: UserProfile) => void;
 }) {
   const [mode, setMode] =
-    useState<"guest" | "login" | "signup">("guest");
+    useState<"guest" | "login" | "signup">(
+      "guest",
+    );
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [age, setAge] = useState("");
-  const [country, setCountry] = useState("India");
-  const [state, setState] = useState(
-    "Madhya Pradesh",
-  );
+  const [country, setCountry] =
+    useState("India");
+  const [state, setState] =
+    useState("Madhya Pradesh");
   const [gender, setGender] =
     useState<Gender>("neutral");
   const [avatar, setAvatar] =
     useState("neutral-1");
 
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
   const selectedAvatars = useMemo(
     () =>
@@ -252,20 +257,22 @@ function ProfileScreen({
           .toString(36)
           .substring(2, 8);
 
-      const result = await api<{
-        user: UserProfile;
-      }>("/api/register", {
-        method: "POST",
-        body: JSON.stringify({
-          username: randomUsername,
-          password: "",
-          age: Number(age),
-          country,
-          state,
-          gender,
-          avatar,
-        }),
-      });
+      const result =
+        await api<{ user: UserProfile }>(
+          "/api/register",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              username: randomUsername,
+              password: "",
+              age: Number(age),
+              country,
+              state,
+              gender,
+              avatar,
+            }),
+          },
+        );
 
       saveUser(result.user);
       onComplete(result.user);
@@ -309,20 +316,22 @@ function ProfileScreen({
     setLoading(true);
 
     try {
-      const result = await api<{
-        user: UserProfile;
-      }>("/api/register", {
-        method: "POST",
-        body: JSON.stringify({
-          username,
-          password,
-          age: Number(age),
-          country,
-          state,
-          gender,
-          avatar,
-        }),
-      });
+      const result =
+        await api<{ user: UserProfile }>(
+          "/api/register",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              username,
+              password,
+              age: Number(age),
+              country,
+              state,
+              gender,
+              avatar,
+            }),
+          },
+        );
 
       saveUser(result.user);
       onComplete(result.user);
@@ -350,15 +359,17 @@ function ProfileScreen({
     setLoading(true);
 
     try {
-      const result = await api<{
-        user: UserProfile;
-      }>("/api/login", {
-        method: "POST",
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      });
+      const result =
+        await api<{ user: UserProfile }>(
+          "/api/login",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              username,
+              password,
+            }),
+          },
+        );
 
       saveUser(result.user);
       onComplete(result.user);
@@ -387,7 +398,8 @@ function ProfileScreen({
             <h1>Welcome back</h1>
 
             <p className="muted">
-              Login to your Stranger Chat profile.
+              Login to your Stranger Chat
+              profile.
             </p>
 
             <label>Username</label>
@@ -487,11 +499,11 @@ function ProfileScreen({
           <h1>Online Stranger Chat</h1>
 
           <p className="hero-text">
-            Chat with strangers from around the
-            world.
+            Chat with strangers from around
+            the world.
             <br />
-            No login required. Choose who you want
-            to talk with.
+            No login required. Choose who you
+            want to talk with.
           </p>
 
           {mode === "guest" && (
@@ -522,7 +534,9 @@ function ProfileScreen({
                   <select
                     value={country}
                     onChange={(e) =>
-                      setCountry(e.target.value)
+                      setCountry(
+                        e.target.value,
+                      )
                     }
                   >
                     {countries.map((item) => (
@@ -563,14 +577,18 @@ function ProfileScreen({
                       item.value,
                     )}`}
                     onClick={() =>
-                      setGender(item.value)
+                      setGender(
+                        item.value,
+                      )
                     }
                     type="button"
                   >
                     <span>
-                      {item.value === "female"
+                      {item.value ===
+                      "female"
                         ? "👩"
-                        : item.value === "male"
+                        : item.value ===
+                            "male"
                           ? "👨"
                           : "🧑"}
                     </span>
@@ -586,28 +604,30 @@ function ProfileScreen({
               <label>Choose your face</label>
 
               <div className="avatar-grid">
-                {selectedAvatars.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    className={`avatar-select ${
-                      avatar === item
-                        ? "avatar-selected"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      setAvatar(item)
-                    }
-                  >
-                    <Avatar
-                      user={{
-                        avatar: item,
-                        gender,
-                      }}
-                      size="large"
-                    />
-                  </button>
-                ))}
+                {selectedAvatars.map(
+                  (item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`avatar-select ${
+                        avatar === item
+                          ? "avatar-selected"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        setAvatar(item)
+                      }
+                    >
+                      <Avatar
+                        user={{
+                          avatar: item,
+                          gender,
+                        }}
+                        size="large"
+                      />
+                    </button>
+                  ),
+                )}
               </div>
 
               {error && (
@@ -627,7 +647,8 @@ function ProfileScreen({
               </button>
 
               <div className="login-hint">
-                Want the same profile every day?
+                Want the same profile every
+                day?
 
                 <button
                   onClick={() =>
@@ -651,7 +672,9 @@ function ProfileScreen({
               <input
                 value={username}
                 onChange={(e) =>
-                  setUsername(e.target.value)
+                  setUsername(
+                    e.target.value,
+                  )
                 }
                 placeholder="Unique username"
                 autoComplete="username"
@@ -662,7 +685,9 @@ function ProfileScreen({
               <input
                 value={password}
                 onChange={(e) =>
-                  setPassword(e.target.value)
+                  setPassword(
+                    e.target.value,
+                  )
                 }
                 type="password"
                 placeholder="At least 6 characters"
@@ -691,7 +716,9 @@ function ProfileScreen({
                   <select
                     value={country}
                     onChange={(e) =>
-                      setCountry(e.target.value)
+                      setCountry(
+                        e.target.value,
+                      )
                     }
                   >
                     {countries.map((item) => (
@@ -732,14 +759,18 @@ function ProfileScreen({
                       item.value,
                     )}`}
                     onClick={() =>
-                      setGender(item.value)
+                      setGender(
+                        item.value,
+                      )
                     }
                     type="button"
                   >
                     <span>
-                      {item.value === "female"
+                      {item.value ===
+                      "female"
                         ? "👩"
-                        : item.value === "male"
+                        : item.value ===
+                            "male"
                           ? "👨"
                           : "🧑"}
                     </span>
@@ -755,28 +786,30 @@ function ProfileScreen({
               <label>Choose your face</label>
 
               <div className="avatar-grid">
-                {selectedAvatars.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    className={`avatar-select ${
-                      avatar === item
-                        ? "avatar-selected"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      setAvatar(item)
-                    }
-                  >
-                    <Avatar
-                      user={{
-                        avatar: item,
-                        gender,
-                      }}
-                      size="large"
-                    />
-                  </button>
-                ))}
+                {selectedAvatars.map(
+                  (item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`avatar-select ${
+                        avatar === item
+                          ? "avatar-selected"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        setAvatar(item)
+                      }
+                    >
+                      <Avatar
+                        user={{
+                          avatar: item,
+                          gender,
+                        }}
+                        size="large"
+                      />
+                    </button>
+                  ),
+                )}
               </div>
 
               {error && (
@@ -801,7 +834,8 @@ function ProfileScreen({
                   setMode("login")
                 }
               >
-                Already have an account? Login
+                Already have an account?
+                Login
               </button>
             </>
           )}
@@ -864,13 +898,15 @@ function UsersScreen({
   currentUser: UserProfile;
   onLogout: () => void;
 }) {
-  const [users, setUsers] = useState<
-    UserProfile[]
-  >([]);
+  const [users, setUsers] =
+    useState<UserProfile[]>([]);
 
-  const [country, setCountry] = useState("");
-  const [state, setState] = useState("");
-  const [gender, setGender] = useState("");
+  const [country, setCountry] =
+    useState("");
+  const [state, setState] =
+    useState("");
+  const [gender, setGender] =
+    useState("");
 
   const [selectedUser, setSelectedUser] =
     useState<UserProfile | null>(null);
@@ -879,7 +915,8 @@ function UsersScreen({
     useState(false);
 
   async function loadUsers() {
-    const params = new URLSearchParams();
+    const params =
+      new URLSearchParams();
 
     if (country) {
       params.set("country", country);
@@ -894,11 +931,12 @@ function UsersScreen({
     }
 
     try {
-      const result = await api<{
-        users: UserProfile[];
-      }>(
-        `/api/users?${params.toString()}`,
-      );
+      const result =
+        await api<{
+          users: UserProfile[];
+        }>(
+          `/api/users?${params.toString()}`,
+        );
 
       setUsers(result.users);
     } catch {
@@ -909,10 +947,11 @@ function UsersScreen({
   useEffect(() => {
     loadUsers();
 
-    const timer = window.setInterval(
-      loadUsers,
-      5000,
-    );
+    const timer =
+      window.setInterval(
+        loadUsers,
+        5000,
+      );
 
     return () =>
       window.clearInterval(timer);
@@ -996,7 +1035,8 @@ function UsersScreen({
             </div>
 
             <h1>
-              Who do you want to talk to?
+              Who do you want to talk
+              to?
             </h1>
 
             <p>
@@ -1165,10 +1205,8 @@ function ChatScreen({
                 id: message.id,
                 content:
                   message.content,
-                user:
-                  message.user,
-                role:
-                  message.role,
+                user: message.user,
+                role: message.role,
                 senderId:
                   message.senderId,
                 image:
@@ -1199,19 +1237,22 @@ function ChatScreen({
   });
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
+    bottomRef.current?.scrollIntoView(
+      {
+        behavior: "smooth",
+      },
+    );
   }, [messages]);
 
-  function sendTyping(value: string) {
+  function sendTyping(
+    value: string,
+  ) {
     setText(value);
 
     socket.send(
       JSON.stringify({
         type: "typing",
-        userId:
-          currentUser.id,
+        userId: currentUser.id,
         username:
           currentUser.username,
         typing: true,
@@ -1249,11 +1290,9 @@ function ChatScreen({
     const message: ChatMessage = {
       id: nanoid(12),
       content,
-      user:
-        currentUser.username,
+      user: currentUser.username,
       role: "user",
-      senderId:
-        currentUser.id,
+      senderId: currentUser.id,
       createdAt: Date.now(),
     };
 
@@ -1283,18 +1322,15 @@ function ChatScreen({
     }
 
     try {
-      await api(
-        "/api/block",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            blockerId:
-              currentUser.id,
-            blockedId:
-              otherUser.id,
-          }),
-        },
-      );
+      await api("/api/block", {
+        method: "POST",
+        body: JSON.stringify({
+          blockerId:
+            currentUser.id,
+          blockedId:
+            otherUser.id,
+        }),
+      });
 
       setBlocked(true);
     } catch {
@@ -1358,8 +1394,8 @@ function ChatScreen({
             </h2>
 
             <p>
-              This is a private
-              one-to-one conversation.
+              This is a private one-to-one
+              conversation.
             </p>
           </div>
         )}
