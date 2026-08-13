@@ -1,3 +1,4 @@
+```tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { usePartySocket } from "partysocket/react";
@@ -141,9 +142,7 @@ async function api<T>(
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(
-      data.error || "Something went wrong",
-    );
+    throw new Error(data.error || "Something went wrong");
   }
 
   return data;
@@ -174,9 +173,7 @@ function Logo() {
       <div className="brand-icon">💬</div>
 
       <div>
-        <div className="brand-name">
-          STRANGER CHAT
-        </div>
+        <div className="brand-name">STRANGER CHAT</div>
 
         <div className="brand-subtitle">
           Meet people. Talk freely.
@@ -192,25 +189,19 @@ function ProfileScreen({
   onComplete: (user: UserProfile) => void;
 }) {
   const [mode, setMode] =
-    useState<"guest" | "login" | "signup">(
-      "guest",
-    );
+    useState<"guest" | "login" | "signup">("guest");
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [age, setAge] = useState("");
-  const [country, setCountry] =
-    useState("India");
-  const [state, setState] =
-    useState("Madhya Pradesh");
+  const [country, setCountry] = useState("India");
+  const [state, setState] = useState("Madhya Pradesh");
   const [gender, setGender] =
     useState<Gender>("neutral");
-  const [avatar, setAvatar] =
-    useState("neutral-1");
+  const [avatar, setAvatar] = useState("neutral-1");
 
   const [error, setError] = useState("");
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
   const selectedAvatars = useMemo(
     () =>
@@ -398,8 +389,7 @@ function ProfileScreen({
             <h1>Welcome back</h1>
 
             <p className="muted">
-              Login to your Stranger Chat
-              profile.
+              Login to your Stranger Chat profile.
             </p>
 
             <label>Username</label>
@@ -539,11 +529,13 @@ function ProfileScreen({
                       )
                     }
                   >
-                    {countries.map((item) => (
-                      <option key={item}>
-                        {item}
-                      </option>
-                    ))}
+                    {countries.map(
+                      (item) => (
+                        <option key={item}>
+                          {item}
+                        </option>
+                      ),
+                    )}
                   </select>
                 </div>
               </div>
@@ -601,7 +593,9 @@ function ProfileScreen({
                 ))}
               </div>
 
-              <label>Choose your face</label>
+              <label>
+                Choose your face
+              </label>
 
               <div className="avatar-grid">
                 {selectedAvatars.map(
@@ -647,8 +641,8 @@ function ProfileScreen({
               </button>
 
               <div className="login-hint">
-                Want the same profile every
-                day?
+                Want the same profile
+                every day?
 
                 <button
                   onClick={() =>
@@ -721,11 +715,13 @@ function ProfileScreen({
                       )
                     }
                   >
-                    {countries.map((item) => (
-                      <option key={item}>
-                        {item}
-                      </option>
-                    ))}
+                    {countries.map(
+                      (item) => (
+                        <option key={item}>
+                          {item}
+                        </option>
+                      ),
+                    )}
                   </select>
                 </div>
               </div>
@@ -783,7 +779,9 @@ function ProfileScreen({
                 ))}
               </div>
 
-              <label>Choose your face</label>
+              <label>
+                Choose your face
+              </label>
 
               <div className="avatar-grid">
                 {selectedAvatars.map(
@@ -886,7 +884,9 @@ function UserCard({
         </div>
       </div>
 
-      <div className="chat-arrow">›</div>
+      <div className="chat-arrow">
+        ›
+      </div>
     </button>
   );
 }
@@ -903,8 +903,10 @@ function UsersScreen({
 
   const [country, setCountry] =
     useState("");
+
   const [state, setState] =
     useState("");
+
   const [gender, setGender] =
     useState("");
 
@@ -955,7 +957,11 @@ function UsersScreen({
 
     return () =>
       window.clearInterval(timer);
-  }, [country, state, gender]);
+  }, [
+    country,
+    state,
+    gender,
+  ]);
 
   if (selectedUser) {
     return (
@@ -1018,7 +1024,9 @@ function UsersScreen({
                 {currentUser.state}
               </div>
 
-              <button onClick={onLogout}>
+              <button
+                onClick={onLogout}
+              >
                 Logout
               </button>
             </div>
@@ -1035,8 +1043,7 @@ function UsersScreen({
             </div>
 
             <h1>
-              Who do you want to talk
-              to?
+              Who do you want to talk to?
             </h1>
 
             <p>
@@ -1051,41 +1058,51 @@ function UsersScreen({
           <select
             value={country}
             onChange={(e) =>
-              setCountry(e.target.value)
+              setCountry(
+                e.target.value,
+              )
             }
           >
             <option value="">
               🌎 All countries
             </option>
 
-            {countries.map((item) => (
-              <option key={item}>
-                {item}
-              </option>
-            ))}
+            {countries.map(
+              (item) => (
+                <option key={item}>
+                  {item}
+                </option>
+              ),
+            )}
           </select>
 
           <select
             value={state}
             onChange={(e) =>
-              setState(e.target.value)
+              setState(
+                e.target.value,
+              )
             }
           >
             <option value="">
               📍 All states / regions
             </option>
 
-            {states.map((item) => (
-              <option key={item}>
-                {item}
-              </option>
-            ))}
+            {states.map(
+              (item) => (
+                <option key={item}>
+                  {item}
+                </option>
+              ),
+            )}
           </select>
 
           <select
             value={gender}
             onChange={(e) =>
-              setGender(e.target.value)
+              setGender(
+                e.target.value,
+              )
             }
           >
             <option value="">
@@ -1107,18 +1124,25 @@ function UsersScreen({
         </div>
 
         <div className="user-list">
-          {users.map((user) => (
-            <UserCard
-              key={user.id}
-              user={user}
-              currentUser={currentUser}
-              onOpen={setSelectedUser}
-            />
-          ))}
+          {users.map(
+            (user) => (
+              <UserCard
+                key={user.id}
+                user={user}
+                currentUser={
+                  currentUser
+                }
+                onOpen={
+                  setSelectedUser
+                }
+              />
+            ),
+          )}
 
           {users.filter(
             (u) =>
-              u.id !== currentUser.id,
+              u.id !==
+              currentUser.id,
           ).length === 0 && (
             <div className="empty-users">
               <div className="empty-icon">
@@ -1128,7 +1152,8 @@ function UsersScreen({
               <h3>No one found</h3>
 
               <p>
-                Try changing the filters.
+                Try changing the
+                filters.
               </p>
             </div>
           )}
@@ -1157,7 +1182,9 @@ function ChatScreen({
   const [messages, setMessages] =
     useState<ChatMessage[]>([]);
 
-  const [text, setText] = useState("");
+  const [text, setText] =
+    useState("");
+
   const [typing, setTyping] =
     useState(false);
 
@@ -1205,8 +1232,10 @@ function ChatScreen({
                 id: message.id,
                 content:
                   message.content,
-                user: message.user,
-                role: message.role,
+                user:
+                  message.user,
+                role:
+                  message.role,
                 senderId:
                   message.senderId,
                 image:
@@ -1219,7 +1248,8 @@ function ChatScreen({
         }
 
         if (
-          message.type === "typing"
+          message.type ===
+          "typing"
         ) {
           if (
             message.userId ===
@@ -1252,7 +1282,8 @@ function ChatScreen({
     socket.send(
       JSON.stringify({
         type: "typing",
-        userId: currentUser.id,
+        userId:
+          currentUser.id,
         username:
           currentUser.username,
         typing: true,
@@ -1281,7 +1312,8 @@ function ChatScreen({
   }
 
   function sendMessage() {
-    const content = text.trim();
+    const content =
+      text.trim();
 
     if (!content || blocked) {
       return;
@@ -1290,9 +1322,11 @@ function ChatScreen({
     const message: ChatMessage = {
       id: nanoid(12),
       content,
-      user: currentUser.username,
+      user:
+        currentUser.username,
       role: "user",
-      senderId: currentUser.id,
+      senderId:
+        currentUser.id,
       createdAt: Date.now(),
     };
 
@@ -1322,15 +1356,18 @@ function ChatScreen({
     }
 
     try {
-      await api("/api/block", {
-        method: "POST",
-        body: JSON.stringify({
-          blockerId:
-            currentUser.id,
-          blockedId:
-            otherUser.id,
-        }),
-      });
+      await api(
+        "/api/block",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            blockerId:
+              currentUser.id,
+            blockedId:
+              otherUser.id,
+          }),
+        },
+      );
 
       setBlocked(true);
     } catch {
@@ -1363,7 +1400,8 @@ function ChatScreen({
           <span>
             <span className="online-dot" />
 
-            Online • {otherUser.age} •{" "}
+            Online •{" "}
+            {otherUser.age} •{" "}
             {flag(
               otherUser.country,
             )}{" "}
@@ -1394,74 +1432,78 @@ function ChatScreen({
             </h2>
 
             <p>
-              This is a private one-to-one
-              conversation.
+              This is a private
+              one-to-one conversation.
             </p>
           </div>
         )}
 
-        {messages.map((message) => {
-          const mine =
-            message.senderId ===
-              currentUser.id ||
-            message.user ===
-              currentUser.username;
+        {messages.map(
+          (message) => {
+            const mine =
+              message.senderId ===
+                currentUser.id ||
+              message.user ===
+                currentUser.username;
 
-          return (
-            <div
-              key={message.id}
-              className={`message-row ${
-                mine
-                  ? "mine"
-                  : "theirs"
-              }`}
-            >
-              {!mine && (
-                <Avatar
-                  user={otherUser}
-                  size="small"
-                />
-              )}
-
+            return (
               <div
-                className={`bubble ${
+                key={message.id}
+                className={`message-row ${
                   mine
                     ? "mine"
                     : "theirs"
                 }`}
               >
-                {message.image && (
-                  <img
-                    src={message.image}
-                    alt="Shared"
-                    className="shared-image"
+                {!mine && (
+                  <Avatar
+                    user={otherUser}
+                    size="small"
                   />
                 )}
 
-                {message.content && (
-                  <div>
-                    {message.content}
-                  </div>
-                )}
+                <div
+                  className={`bubble ${
+                    mine
+                      ? "mine"
+                      : "theirs"
+                  }`}
+                >
+                  {message.image && (
+                    <img
+                      src={
+                        message.image
+                      }
+                      alt="Shared"
+                      className="shared-image"
+                    />
+                  )}
 
-                <span className="message-time">
-                  {message.createdAt
-                    ? new Date(
-                        message.createdAt,
-                      ).toLocaleTimeString(
-                        [],
-                        {
-                          hour: "2-digit",
-                          minute:
-                            "2-digit",
-                        },
-                      )
-                    : ""}
-                </span>
+                  {message.content && (
+                    <div>
+                      {message.content}
+                    </div>
+                  )}
+
+                  <span className="message-time">
+                    {message.createdAt
+                      ? new Date(
+                          message.createdAt,
+                        ).toLocaleTimeString(
+                          [],
+                          {
+                            hour: "2-digit",
+                            minute:
+                              "2-digit",
+                          },
+                        )
+                      : ""}
+                  </span>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          },
+        )}
 
         {typing && (
           <div className="typing">
@@ -1559,3 +1601,4 @@ createRoot(
     <App />
   </React.StrictMode>,
 );
+```
