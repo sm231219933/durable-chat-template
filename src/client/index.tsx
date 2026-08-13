@@ -14,7 +14,7 @@ import {
   type UserProfile,
 } from "../shared";
 
-import "./style.css";
+
 
 const USER_KEY = "bharat-chat-user";
 
