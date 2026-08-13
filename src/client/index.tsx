@@ -95,7 +95,7 @@ function flag(country: string) {
     Indonesia: "🇮🇩",
     Philippines: "🇵🇭",
     Vietnam: "🇻🇳",
-    South Africa: "🇿🇦",
+    "South Africa": "🇿🇦",
     Nigeria: "🇳🇬",
     Kenya: "🇰🇪",
     Egypt: "🇪🇬",
@@ -103,7 +103,7 @@ function flag(country: string) {
     Chile: "🇨🇱",
     Colombia: "🇨🇴",
     Peru: "🇵🇪",
-    "Other": "🌎",
+    Other: "🌎",
   };
 
   return flags[country] || "🌎";
@@ -1082,6 +1082,16 @@ function ChatScreen({
     });
   }, [messages]);
 
+  useEffect(() => {
+    return () => {
+      if (typingTimer.current) {
+        window.clearTimeout(
+          typingTimer.current,
+        );
+      }
+    };
+  }, []);
+
   function sendTyping(value: string) {
     setText(value);
 
@@ -1364,10 +1374,7 @@ function App() {
     );
 
   function logout() {
-    localStorage.removeItem(
-      USER_KEY,
-    );
-
+    localStorage.removeItem(USER_KEY);
     setUser(null);
   }
 
