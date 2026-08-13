@@ -1,55 +1,43 @@
+export type Gender = "male" | "female" | "neutral";
+
+export type Avatar = {
+	id: string;
+	gender: Gender;
+};
+
+export type UserProfile = {
+	id: string;
+	username: string;
+	age: number;
+	country: string;
+	state: string;
+	gender: Gender;
+	avatar: string;
+	online: boolean;
+};
+
 export type ChatMessage = {
 	id: string;
+	senderId: string;
+	receiverId: string;
 	content: string;
-	user: string;
-	role: "user" | "assistant";
+	timestamp: number;
 };
 
 export type Message =
 	| {
-			type: "add";
-			id: string;
-			content: string;
-			user: string;
-			role: "user" | "assistant";
+			type: "chat";
+			message: ChatMessage;
 	  }
 	| {
-			type: "update";
-			id: string;
-			content: string;
-			user: string;
-			role: "user" | "assistant";
-	  }
-	| {
-			type: "all";
+			type: "history";
 			messages: ChatMessage[];
+	  }
+	| {
+			type: "users";
+			users: UserProfile[];
+	  }
+	| {
+			type: "error";
+			message: string;
 	  };
-
-export const names = [
-	"Alice",
-	"Bob",
-	"Charlie",
-	"David",
-	"Eve",
-	"Frank",
-	"Grace",
-	"Heidi",
-	"Ivan",
-	"Judy",
-	"Kevin",
-	"Linda",
-	"Mallory",
-	"Nancy",
-	"Oscar",
-	"Peggy",
-	"Quentin",
-	"Randy",
-	"Steve",
-	"Trent",
-	"Ursula",
-	"Victor",
-	"Walter",
-	"Xavier",
-	"Yvonne",
-	"Zoe",
-];
