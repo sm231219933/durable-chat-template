@@ -1,131 +1,139 @@
 import { createRoot } from "react-dom/client";
 import { usePartySocket } from "partysocket/react";
 import React, { useState } from "react";
-import {
-	BrowserRouter,
-	Routes,
-	Route,
-	Navigate,
-	useParams,
-} from "react-router";
 import { nanoid } from "nanoid";
 
-import { names, type ChatMessage, type Message } from "../shared";
+import type { ChatMessage, Message } from "../shared";
 
 function App() {
-	const [name] = useState(names[Math.floor(Math.random() * names.length)]);
+	const [userId] = useState(() => nanoid(10));
+	const [username] = useState(() => `Guest-${nanoid(5)}`);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
-	const { room } = useParams();
+	const [text, setText] = useState("");
 
 	const socket = usePartySocket({
 		party: "chat",
-		room,
+		room: "main",
+
 		onMessage: (evt) => {
 			const message = JSON.parse(evt.data as string) as Message;
-			if (message.type === "add") {
-				const foundIndex = messages.findIndex((m) => m.id === message.id);
-				if (foundIndex === -1) {
-					// probably someone else who added a message
-					setMessages((messages) => [
-						...messages,
-						{
-							id: message.id,
-							content: message.content,
-							user: message.user,
-							role: message.role,
-						},
-					]);
-				} else {
-					// this usually means we ourselves added a message
-					// and it was broadcasted back
-					// so let's replace the message with the new message
-					setMessages((messages) => {
-						return messages
-							.slice(0, foundIndex)
-							.concat({
-								id: message.id,
-								content: message.content,
-								user: message.user,
-								role: message.role,
-							})
-							.concat(messages.slice(foundIndex + 1));
-					});
-				}
-			} else if (message.type === "update") {
-				setMessages((messages) =>
-					messages.map((m) =>
-						m.id === message.id
-							? {
-									id: message.id,
-									content: message.content,
-									user: message.user,
-									role: message.role,
-								}
-							: m,
-					),
-				);
-			} else {
+
+			if (message.type === "history") {
 				setMessages(message.messages);
+			}
+
+			if (message.type === "chat") {
+				setMessages((current) => {
+					if (current.some((item) => item.id === message.message.id)) {
+						return current;
+					}
+
+					return [...current, message.message];
+				});
 			}
 		},
 	});
 
+	function sendMessage(e: React.FormEvent) {
+		e.preventDefault();
+
+		const content = text.trim();
+
+		if (!content) return;
+
+		const message: ChatMessage = {
+			id: nanoid(10),
+			senderId: userId,
+			receiverId: "main",
+			content,
+			timestamp: Date.now(),
+		};
+
+		setMessages((current) => [...current, message]);
+
+		socket.send(
+			JSON.stringify({
+				type: "chat",
+				message,
+			} satisfies Message),
+		);
+
+		setText("");
+	}
+
 	return (
-		<div className="chat container">
-			{messages.map((message) => (
-				<div key={message.id} className="row message">
-					<div className="two columns user">{message.user}</div>
-					<div className="ten columns">{message.content}</div>
-				</div>
-			))}
+		<div
+			style={{
+				maxWidth: "700px",
+				margin: "40px auto",
+				padding: "20px",
+				fontFamily: "Arial, sans-serif",
+			}}
+		>
+			<h2>BHARAT CHAT</h2>
+
+			<p>
+				Logged in as <strong>{username}</strong>
+			</p>
+
+			<div
+				style={{
+					minHeight: "400px",
+					border: "1px solid #ddd",
+					borderRadius: "12px",
+					padding: "15px",
+					marginBottom: "15px",
+				}}
+			>
+				{messages.length === 0 ? (
+					<p>No messages yet.</p>
+				) : (
+					messages.map((message) => (
+						<div
+							key={message.id}
+							style={{
+								marginBottom: "10px",
+								padding: "8px 12px",
+								borderRadius: "10px",
+								background:
+									message.senderId === userId
+										? "#e8f0ff"
+										: "#f3f3f3",
+							}}
+						>
+							<strong>
+								{message.senderId === userId ? "You" : "User"}
+							</strong>
+							<div>{message.content}</div>
+						</div>
+					))
+				)}
+			</div>
+
 			<form
-				className="row"
-				onSubmit={(e) => {
-					e.preventDefault();
-					const content = e.currentTarget.elements.namedItem(
-						"content",
-					) as HTMLInputElement;
-					const chatMessage: ChatMessage = {
-						id: nanoid(8),
-						content: content.value,
-						user: name,
-						role: "user",
-					};
-					setMessages((messages) => [...messages, chatMessage]);
-					// we could broadcast the message here
-
-					socket.send(
-						JSON.stringify({
-							type: "add",
-							...chatMessage,
-						} satisfies Message),
-					);
-
-					content.value = "";
+				onSubmit={sendMessage}
+				style={{
+					display: "flex",
+					gap: "10px",
 				}}
 			>
 				<input
-					type="text"
-					name="content"
-					className="ten columns my-input-text"
-					placeholder={`Hello ${name}! Type a message...`}
+					value={text}
+					onChange={(e) => setText(e.target.value)}
+					placeholder="Type a message..."
 					autoComplete="off"
+					style={{
+						flex: 1,
+						padding: "12px",
+						borderRadius: "8px",
+						border: "1px solid #ccc",
+					}}
 				/>
-				<button type="submit" className="send-message two columns">
-					Send
-				</button>
+
+				<button type="submit">Send</button>
 			</form>
 		</div>
 	);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-createRoot(document.getElementById("root")!).render(
-	<BrowserRouter>
-		<Routes>
-			<Route path="/" element={<Navigate to={`/${nanoid()}`} />} />
-			<Route path="/:room" element={<App />} />
-			<Route path="*" element={<Navigate to="/" />} />
-		</Routes>
-	</BrowserRouter>,
-);
+createRoot(document.getElementById("root")!).render(<App />);
