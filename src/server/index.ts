@@ -19,13 +19,22 @@ export class Chat extends Server<Env> {
         user TEXT NOT NULL,
         role TEXT NOT NULL,
         content TEXT NOT NULL,
+        sender_id TEXT,
+        image TEXT,
         created_at INTEGER NOT NULL
       )
     `);
 
     this.messages = this.ctx.storage.sql
       .exec(
-        `SELECT id, user, role, content
+        `SELECT
+          id,
+          user,
+          role,
+          content,
+          sender_id as senderId,
+          image,
+          created_at as createdAt
          FROM messages
          ORDER BY created_at ASC
          LIMIT 200`,
@@ -51,13 +60,15 @@ export class Chat extends Server<Env> {
 
     this.ctx.storage.sql.exec(
       `INSERT OR REPLACE INTO messages
-       (id, user, role, content, created_at)
-       VALUES (?, ?, ?, ?, ?)`,
+       (id, user, role, content, sender_id, image, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       message.id,
       message.user,
       message.role,
       message.content,
-      Date.now(),
+      message.senderId || null,
+      message.image || null,
+      message.createdAt || Date.now(),
     );
   }
 
@@ -71,12 +82,32 @@ export class Chat extends Server<Env> {
           user: parsed.user,
           role: parsed.role,
           content: parsed.content,
+          senderId: parsed.senderId,
+          image: parsed.image,
+          createdAt: parsed.createdAt || Date.now(),
         };
 
         this.saveMessage(chatMessage);
+
+        this.broadcast(
+          JSON.stringify({
+            type: "add",
+            ...chatMessage,
+          } satisfies Message),
+        );
+
+        return;
       }
 
-      this.broadcast(message);
+      if (parsed.type === "typing") {
+        this.broadcast(message);
+        return;
+      }
+
+      if (parsed.type === "update") {
+        this.broadcast(message);
+        return;
+      }
     } catch {
       // Ignore invalid WebSocket messages.
     }
@@ -142,56 +173,100 @@ async function ensureDatabase(db: D1Database) {
 }
 
 function validGender(value: string) {
-  return value === "male" ||
+  return (
+    value === "male" ||
     value === "female" ||
-    value === "neutral";
+    value === "neutral"
+  );
 }
 
 function validAge(value: unknown) {
   const age = Number(value);
-  return Number.isInteger(age) && age >= 13 && age <= 100;
+
+  return (
+    Number.isInteger(age) &&
+    age >= 13 &&
+    age <= 100
+  );
 }
 
-async function getUsers(request: Request, env: Env) {
+function cleanString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+async function getUsers(
+  request: Request,
+  env: Env,
+) {
   await ensureDatabase(env.DB);
 
   const url = new URL(request.url);
 
-  const country = url.searchParams.get("country") || "";
-  const state = url.searchParams.get("state") || "";
-  const gender = url.searchParams.get("gender") || "";
+  const country =
+    url.searchParams.get("country") || "";
+
+  const state =
+    url.searchParams.get("state") || "";
+
+  const gender =
+    url.searchParams.get("gender") || "";
+
+  const currentUserId =
+    url.searchParams.get("userId") || "";
 
   const params: string[] = [];
   const where: string[] = [];
 
   if (country) {
-    where.push("country = ?");
+    where.push("u.country = ?");
     params.push(country);
   }
 
   if (state) {
-    where.push("state = ?");
+    where.push("u.state = ?");
     params.push(state);
   }
 
   if (validGender(gender)) {
-    where.push("gender = ?");
+    where.push("u.gender = ?");
     params.push(gender);
+  }
+
+  if (currentUserId) {
+    where.push(`
+      u.id NOT IN (
+        SELECT blocked_id
+        FROM blocks
+        WHERE blocker_id = ?
+      )
+    `);
+
+    params.push(currentUserId);
+
+    where.push(`
+      u.id NOT IN (
+        SELECT blocker_id
+        FROM blocks
+        WHERE blocked_id = ?
+      )
+    `);
+
+    params.push(currentUserId);
   }
 
   const query = `
     SELECT
-      id,
-      username,
-      age,
-      country,
-      state,
-      gender,
-      avatar,
-      last_seen
-    FROM users
+      u.id,
+      u.username,
+      u.age,
+      u.country,
+      u.state,
+      u.gender,
+      u.avatar,
+      u.last_seen
+    FROM users u
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-    ORDER BY last_seen DESC
+    ORDER BY u.last_seen DESC
     LIMIT 100
   `;
 
@@ -205,7 +280,10 @@ async function getUsers(request: Request, env: Env) {
   });
 }
 
-async function register(request: Request, env: Env) {
+async function register(
+  request: Request,
+  env: Env,
+) {
   await ensureDatabase(env.DB);
 
   const body = await request.json() as {
@@ -218,59 +296,111 @@ async function register(request: Request, env: Env) {
     avatar?: string;
   };
 
-  const username = body.username?.trim() || "";
+  const username = cleanString(body.username);
   const password = body.password || "";
 
-  if (username.length < 3 || username.length > 24) {
-    return json({ error: "Username must be 3-24 characters." }, 400);
+  if (
+    username.length < 3 ||
+    username.length > 24
+  ) {
+    return json(
+      {
+        error:
+          "Username must be 3-24 characters.",
+      },
+      400,
+    );
   }
 
   if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-    return json({
-      error: "Username can contain only letters, numbers and _.",
-    }, 400);
+    return json(
+      {
+        error:
+          "Username can contain only letters, numbers and _.",
+      },
+      400,
+    );
   }
 
-  if (password && password.length < 6) {
-    return json({
-      error: "Password must be at least 6 characters.",
-    }, 400);
+  if (
+    password &&
+    password.length < 6
+  ) {
+    return json(
+      {
+        error:
+          "Password must be at least 6 characters.",
+      },
+      400,
+    );
   }
 
   if (!validAge(body.age)) {
-    return json({ error: "Invalid age." }, 400);
+    return json(
+      {
+        error: "Invalid age.",
+      },
+      400,
+    );
   }
 
-  if (!body.country || !body.state || !body.gender) {
-    return json({
-      error: "Country, state and gender are required.",
-    }, 400);
+  const country = cleanString(body.country);
+  const state = cleanString(body.state);
+  const gender = cleanString(body.gender);
+
+  if (
+    !country ||
+    !state ||
+    !gender
+  ) {
+    return json(
+      {
+        error:
+          "Country, state and gender are required.",
+      },
+      400,
+    );
   }
 
-  if (!validGender(body.gender)) {
-    return json({ error: "Invalid gender." }, 400);
+  if (!validGender(gender)) {
+    return json(
+      {
+        error: "Invalid gender.",
+      },
+      400,
+    );
   }
 
   const existing = await env.DB
-    .prepare("SELECT id FROM users WHERE username = ? COLLATE NOCASE")
+    .prepare(
+      `SELECT id
+       FROM users
+       WHERE username = ? COLLATE NOCASE`,
+    )
     .bind(username)
     .first();
 
   if (existing) {
-    return json({
-      error: "Username already exists.",
-    }, 409);
+    return json(
+      {
+        error:
+          "Username already exists.",
+      },
+      409,
+    );
   }
 
   const id = randomId();
 
   const avatar =
     body.avatar ||
-    (body.gender === "female"
-      ? "female-1"
-      : body.gender === "male"
-        ? "male-1"
-        : "neutral-1");
+    (
+      gender === "female"
+        ? "female-1"
+        : gender === "male"
+          ? "male-1"
+          : "neutral-1"
+    );
 
   const passwordHash = password
     ? await hashPassword(password)
@@ -281,7 +411,18 @@ async function register(request: Request, env: Env) {
   await env.DB
     .prepare(`
       INSERT INTO users
-      (id, username, password_hash, age, country, state, gender, avatar, created_at, last_seen)
+      (
+        id,
+        username,
+        password_hash,
+        age,
+        country,
+        state,
+        gender,
+        avatar,
+        created_at,
+        last_seen
+      )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     .bind(
@@ -289,29 +430,35 @@ async function register(request: Request, env: Env) {
       username,
       passwordHash,
       body.age,
-      body.country,
-      body.state,
-      body.gender,
+      country,
+      state,
+      gender,
       avatar,
       now,
       now,
     )
     .run();
 
-  return json({
-    user: {
-      id,
-      username,
-      age: body.age,
-      country: body.country,
-      state: body.state,
-      gender: body.gender,
-      avatar,
+  return json(
+    {
+      user: {
+        id,
+        username,
+        age: body.age,
+        country,
+        state,
+        gender,
+        avatar,
+      },
     },
-  }, 201);
+    201,
+  );
 }
 
-async function login(request: Request, env: Env) {
+async function login(
+  request: Request,
+  env: Env,
+) {
   await ensureDatabase(env.DB);
 
   const body = await request.json() as {
@@ -319,8 +466,18 @@ async function login(request: Request, env: Env) {
     password?: string;
   };
 
-  const username = body.username?.trim() || "";
+  const username = cleanString(body.username);
   const password = body.password || "";
+
+  if (!username || !password) {
+    return json(
+      {
+        error:
+          "Enter username and password.",
+      },
+      400,
+    );
+  }
 
   const user = await env.DB
     .prepare(`
@@ -340,23 +497,45 @@ async function login(request: Request, env: Env) {
       avatar: string;
     }>();
 
-  if (!user || !user.password_hash) {
-    return json({
-      error: "Invalid username or password.",
-    }, 401);
+  if (
+    !user ||
+    !user.password_hash
+  ) {
+    return json(
+      {
+        error:
+          "Invalid username or password.",
+      },
+      401,
+    );
   }
 
-  const passwordHash = await hashPassword(password);
+  const passwordHash =
+    await hashPassword(password);
 
-  if (passwordHash !== user.password_hash) {
-    return json({
-      error: "Invalid username or password.",
-    }, 401);
+  if (
+    passwordHash !==
+    user.password_hash
+  ) {
+    return json(
+      {
+        error:
+          "Invalid username or password.",
+      },
+      401,
+    );
   }
 
   await env.DB
-    .prepare("UPDATE users SET last_seen = ? WHERE id = ?")
-    .bind(Date.now(), user.id)
+    .prepare(
+      `UPDATE users
+       SET last_seen = ?
+       WHERE id = ?`,
+    )
+    .bind(
+      Date.now(),
+      user.id,
+    )
     .run();
 
   return json({
@@ -372,7 +551,50 @@ async function login(request: Request, env: Env) {
   });
 }
 
-async function blockUser(request: Request, env: Env) {
+async function updateLastSeen(
+  request: Request,
+  env: Env,
+) {
+  await ensureDatabase(env.DB);
+
+  const body = await request.json() as {
+    userId?: string;
+  };
+
+  const userId =
+    cleanString(body.userId);
+
+  if (!userId) {
+    return json(
+      {
+        error:
+          "Missing user ID.",
+      },
+      400,
+    );
+  }
+
+  await env.DB
+    .prepare(
+      `UPDATE users
+       SET last_seen = ?
+       WHERE id = ?`,
+    )
+    .bind(
+      Date.now(),
+      userId,
+    )
+    .run();
+
+  return json({
+    success: true,
+  });
+}
+
+async function blockUser(
+  request: Request,
+  env: Env,
+) {
   await ensureDatabase(env.DB);
 
   const body = await request.json() as {
@@ -380,62 +602,115 @@ async function blockUser(request: Request, env: Env) {
     blockedId?: string;
   };
 
-  if (!body.blockerId || !body.blockedId) {
-    return json({ error: "Missing user IDs." }, 400);
+  const blockerId =
+    cleanString(body.blockerId);
+
+  const blockedId =
+    cleanString(body.blockedId);
+
+  if (!blockerId || !blockedId) {
+    return json(
+      {
+        error:
+          "Missing user IDs.",
+      },
+      400,
+    );
   }
 
-  if (body.blockerId === body.blockedId) {
-    return json({ error: "You cannot block yourself." }, 400);
+  if (blockerId === blockedId) {
+    return json(
+      {
+        error:
+          "You cannot block yourself.",
+      },
+      400,
+    );
   }
 
   await env.DB
     .prepare(`
       INSERT OR IGNORE INTO blocks
-      (blocker_id, blocked_id, created_at)
+      (
+        blocker_id,
+        blocked_id,
+        created_at
+      )
       VALUES (?, ?, ?)
     `)
     .bind(
-      body.blockerId,
-      body.blockedId,
+      blockerId,
+      blockedId,
       Date.now(),
     )
     .run();
 
-  return json({ success: true });
+  return json({
+    success: true,
+  });
 }
 
-async function api(request: Request, env: Env) {
+async function api(
+  request: Request,
+  env: Env,
+) {
   const url = new URL(request.url);
 
-  if (request.method === "POST" && url.pathname === "/api/register") {
+  if (
+    request.method === "POST" &&
+    url.pathname === "/api/register"
+  ) {
     return register(request, env);
   }
 
-  if (request.method === "POST" && url.pathname === "/api/login") {
+  if (
+    request.method === "POST" &&
+    url.pathname === "/api/login"
+  ) {
     return login(request, env);
   }
 
-  if (request.method === "GET" && url.pathname === "/api/users") {
+  if (
+    request.method === "GET" &&
+    url.pathname === "/api/users"
+  ) {
     return getUsers(request, env);
   }
 
-  if (request.method === "POST" && url.pathname === "/api/block") {
+  if (
+    request.method === "POST" &&
+    url.pathname === "/api/block"
+  ) {
     return blockUser(request, env);
+  }
+
+  if (
+    request.method === "POST" &&
+    url.pathname === "/api/last-seen"
+  ) {
+    return updateLastSeen(request, env);
   }
 
   return null;
 }
 
 export default {
-  async fetch(request, env) {
-    const apiResponse = await api(request, env);
+  async fetch(
+    request,
+    env,
+  ) {
+    const apiResponse =
+      await api(request, env);
 
     if (apiResponse) {
       return apiResponse;
     }
 
     return (
-      (await routePartykitRequest(request, { ...env })) ||
+      (await routePartykitRequest(
+        request,
+        { ...env },
+      )) ||
       env.ASSETS.fetch(request)
     );
   },
