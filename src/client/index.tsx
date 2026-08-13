@@ -89,7 +89,7 @@ function flag(country: string) {
     Pakistan: "🇵🇰",
     Bangladesh: "🇧🇩",
     Nepal: "🇳🇵",
-    Sri Lanka: "🇱🇰",
+    "Sri Lanka": "🇱🇰",
     Thailand: "🇹🇭",
     Malaysia: "🇲🇾",
     Indonesia: "🇮🇩",
