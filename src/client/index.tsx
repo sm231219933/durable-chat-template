@@ -1,4 +1,3 @@
-```tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { usePartySocket } from "partysocket/react";
@@ -21,34 +20,26 @@ const USER_KEY = "stranger-chat-user";
 
 function avatarEmoji(avatar: string, gender: Gender) {
   if (avatar.includes("2")) {
-    return gender === "female"
-      ? "👩🏻"
-      : gender === "male"
-        ? "👨🏻"
-        : "🧑🏻";
+    if (gender === "female") return "👩🏻";
+    if (gender === "male") return "👨🏻";
+    return "🧑🏻";
   }
 
   if (avatar.includes("3")) {
-    return gender === "female"
-      ? "👩🏽"
-      : gender === "male"
-        ? "👨🏽"
-        : "🧑🏽";
+    if (gender === "female") return "👩🏽";
+    if (gender === "male") return "👨🏽";
+    return "🧑🏽";
   }
 
   if (avatar.includes("4")) {
-    return gender === "female"
-      ? "👩🏿"
-      : gender === "male"
-        ? "👨🏿"
-        : "🧑🏿";
+    if (gender === "female") return "👩🏿";
+    if (gender === "male") return "👨🏿";
+    return "🧑🏿";
   }
 
-  return gender === "female"
-    ? "👩"
-    : gender === "male"
-      ? "👨"
-      : "🧑";
+  if (gender === "female") return "👩";
+  if (gender === "male") return "👨";
+  return "🧑";
 }
 
 function genderColor(gender: Gender) {
@@ -155,14 +146,13 @@ function Avatar({
   user: Pick<UserProfile, "avatar" | "gender">;
   size?: "small" | "normal" | "large";
 }) {
+  const colorClass = genderColor(user.gender);
+  const avatarClass = `avatar avatar-${colorClass} avatar-${size}`;
+  const emoji = avatarEmoji(user.avatar, user.gender);
+
   return (
-    <div
-      className={`avatar avatar-${genderColor(
-        user.gender,
-      )} avatar-${size}`}
-      title={user.gender}
-    >
-      {avatarEmoji(user.avatar, user.gender)}
+    <div className={avatarClass} title={user.gender}>
+      {emoji}
     </div>
   );
 }
@@ -196,46 +186,35 @@ function ProfileScreen({
   const [age, setAge] = useState("");
   const [country, setCountry] = useState("India");
   const [state, setState] = useState("Madhya Pradesh");
-  const [gender, setGender] =
-    useState<Gender>("neutral");
+  const [gender, setGender] = useState<Gender>("neutral");
   const [avatar, setAvatar] = useState("neutral-1");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const selectedAvatars = useMemo(
-    () =>
-      avatarOptions.filter((item) => {
-        if (gender === "female") {
-          return item.startsWith("female");
-        }
+  const selectedAvatars = useMemo(() => {
+    return avatarOptions.filter((item) => {
+      if (gender === "female") {
+        return item.startsWith("female");
+      }
 
-        if (gender === "male") {
-          return item.startsWith("male");
-        }
+      if (gender === "male") {
+        return item.startsWith("male");
+      }
 
-        return item.startsWith("neutral");
-      }),
-    [gender],
-  );
+      return item.startsWith("neutral");
+    });
+  }, [gender]);
 
   useEffect(() => {
-    setAvatar(
-      selectedAvatars[0] || "neutral-1",
-    );
+    setAvatar(selectedAvatars[0] || "neutral-1");
   }, [selectedAvatars]);
 
   async function guest() {
     setError("");
 
-    if (
-      !age ||
-      Number(age) < 13 ||
-      Number(age) > 100
-    ) {
-      setError(
-        "Please enter a valid age (13–100).",
-      );
+    if (!age || Number(age) < 13 || Number(age) > 100) {
+      setError("Please enter a valid age (13–100).");
       return;
     }
 
@@ -243,27 +222,23 @@ function ProfileScreen({
 
     try {
       const randomUsername =
-        "Guest_" +
-        Math.random()
-          .toString(36)
-          .substring(2, 8);
+        "Guest_" + Math.random().toString(36).substring(2, 8);
 
-      const result =
-        await api<{ user: UserProfile }>(
-          "/api/register",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              username: randomUsername,
-              password: "",
-              age: Number(age),
-              country,
-              state,
-              gender,
-              avatar,
-            }),
-          },
-        );
+      const result = await api<{ user: UserProfile }>(
+        "/api/register",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            username: randomUsername,
+            password: "",
+            age: Number(age),
+            country,
+            state,
+            gender,
+            avatar,
+          }),
+        },
+      );
 
       saveUser(result.user);
       onComplete(result.user);
@@ -282,24 +257,16 @@ function ProfileScreen({
     setError("");
 
     if (username.length < 3) {
-      setError(
-        "Username must be at least 3 characters.",
-      );
+      setError("Username must be at least 3 characters.");
       return;
     }
 
     if (password.length < 6) {
-      setError(
-        "Password must be at least 6 characters.",
-      );
+      setError("Password must be at least 6 characters.");
       return;
     }
 
-    if (
-      !age ||
-      Number(age) < 13 ||
-      Number(age) > 100
-    ) {
+    if (!age || Number(age) < 13 || Number(age) > 100) {
       setError("Please enter a valid age.");
       return;
     }
@@ -307,30 +274,27 @@ function ProfileScreen({
     setLoading(true);
 
     try {
-      const result =
-        await api<{ user: UserProfile }>(
-          "/api/register",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              username,
-              password,
-              age: Number(age),
-              country,
-              state,
-              gender,
-              avatar,
-            }),
-          },
-        );
+      const result = await api<{ user: UserProfile }>(
+        "/api/register",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            username,
+            password,
+            age: Number(age),
+            country,
+            state,
+            gender,
+            avatar,
+          }),
+        },
+      );
 
       saveUser(result.user);
       onComplete(result.user);
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Signup failed.",
+        err instanceof Error ? err.message : "Signup failed.",
       );
     } finally {
       setLoading(false);
@@ -341,34 +305,29 @@ function ProfileScreen({
     setError("");
 
     if (!username || !password) {
-      setError(
-        "Enter username and password.",
-      );
+      setError("Enter username and password.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const result =
-        await api<{ user: UserProfile }>(
-          "/api/login",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              username,
-              password,
-            }),
-          },
-        );
+      const result = await api<{ user: UserProfile }>(
+        "/api/login",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+        },
+      );
 
       saveUser(result.user);
       onComplete(result.user);
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Login failed.",
+        err instanceof Error ? err.message : "Login failed.",
       );
     } finally {
       setLoading(false);
@@ -396,9 +355,7 @@ function ProfileScreen({
 
             <input
               value={username}
-              onChange={(e) =>
-                setUsername(e.target.value)
-              }
+              onChange={(e) => setUsername(e.target.value)}
               placeholder="Your username"
               autoComplete="username"
             />
@@ -407,44 +364,32 @@ function ProfileScreen({
 
             <input
               value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
+              onChange={(e) => setPassword(e.target.value)}
               type="password"
               placeholder="Your password"
               autoComplete="current-password"
             />
 
-            {error && (
-              <div className="error">
-                {error}
-              </div>
-            )}
+            {error && <div className="error">{error}</div>}
 
             <button
               className="primary-button"
               onClick={login}
               disabled={loading}
             >
-              {loading
-                ? "Logging in..."
-                : "Login"}
+              {loading ? "Logging in..." : "Login"}
             </button>
 
             <button
               className="text-button"
-              onClick={() =>
-                setMode("signup")
-              }
+              onClick={() => setMode("signup")}
             >
               Create a new account
             </button>
 
             <button
               className="text-button"
-              onClick={() =>
-                setMode("guest")
-              }
+              onClick={() => setMode("guest")}
             >
               Continue as guest
             </button>
@@ -462,18 +407,14 @@ function ProfileScreen({
         <div className="top-actions">
           <button
             className="outline-button"
-            onClick={() =>
-              setMode("login")
-            }
+            onClick={() => setMode("login")}
           >
             Login
           </button>
 
           <button
             className="small-primary"
-            onClick={() =>
-              setMode("signup")
-            }
+            onClick={() => setMode("signup")}
           >
             Sign up
           </button>
@@ -489,18 +430,14 @@ function ProfileScreen({
           <h1>Online Stranger Chat</h1>
 
           <p className="hero-text">
-            Chat with strangers from around
-            the world.
+            Chat with strangers from around the world.
             <br />
-            No login required. Choose who you
-            want to talk with.
+            No login required. Choose who you want to talk with.
           </p>
 
           {mode === "guest" && (
             <>
-              <div className="section-title">
-                Quick profile
-              </div>
+              <div className="section-title">Quick profile</div>
 
               <div className="field-row">
                 <div className="field">
@@ -508,9 +445,7 @@ function ProfileScreen({
 
                   <input
                     value={age}
-                    onChange={(e) =>
-                      setAge(e.target.value)
-                    }
+                    onChange={(e) => setAge(e.target.value)}
                     type="number"
                     min="13"
                     max="100"
@@ -523,19 +458,11 @@ function ProfileScreen({
 
                   <select
                     value={country}
-                    onChange={(e) =>
-                      setCountry(
-                        e.target.value,
-                      )
-                    }
+                    onChange={(e) => setCountry(e.target.value)}
                   >
-                    {countries.map(
-                      (item) => (
-                        <option key={item}>
-                          {item}
-                        </option>
-                      ),
-                    )}
+                    {countries.map((item) => (
+                      <option key={item}>{item}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -544,14 +471,10 @@ function ProfileScreen({
 
               <select
                 value={state}
-                onChange={(e) =>
-                  setState(e.target.value)
-                }
+                onChange={(e) => setState(e.target.value)}
               >
                 {states.map((item) => (
-                  <option key={item}>
-                    {item}
-                  </option>
+                  <option key={item}>{item}</option>
                 ))}
               </select>
 
@@ -562,93 +485,61 @@ function ProfileScreen({
                   <button
                     key={item.value}
                     className={`gender-choice ${
-                      gender === item.value
-                        ? "selected"
-                        : ""
-                    } ${genderColor(
-                      item.value,
-                    )}`}
-                    onClick={() =>
-                      setGender(
-                        item.value,
-                      )
-                    }
+                      gender === item.value ? "selected" : ""
+                    } ${genderColor(item.value)}`}
+                    onClick={() => setGender(item.value)}
                     type="button"
                   >
                     <span>
-                      {item.value ===
-                      "female"
+                      {item.value === "female"
                         ? "👩"
-                        : item.value ===
-                            "male"
+                        : item.value === "male"
                           ? "👨"
                           : "🧑"}
                     </span>
 
-                    {item.label.replace(
-                      /^[^\s]+\s/,
-                      "",
-                    )}
+                    {item.label.replace(/^[^\s]+\s/, "")}
                   </button>
                 ))}
               </div>
 
-              <label>
-                Choose your face
-              </label>
+              <label>Choose your face</label>
 
               <div className="avatar-grid">
-                {selectedAvatars.map(
-                  (item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      className={`avatar-select ${
-                        avatar === item
-                          ? "avatar-selected"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        setAvatar(item)
-                      }
-                    >
-                      <Avatar
-                        user={{
-                          avatar: item,
-                          gender,
-                        }}
-                        size="large"
-                      />
-                    </button>
-                  ),
-                )}
+                {selectedAvatars.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className={`avatar-select ${
+                      avatar === item ? "avatar-selected" : ""
+                    }`}
+                    onClick={() => setAvatar(item)}
+                  >
+                    <Avatar
+                      user={{
+                        avatar: item,
+                        gender,
+                      }}
+                      size="large"
+                    />
+                  </button>
+                ))}
               </div>
 
-              {error && (
-                <div className="error">
-                  {error}
-                </div>
-              )}
+              {error && <div className="error">{error}</div>}
 
               <button
                 className="primary-button big-button"
                 onClick={guest}
                 disabled={loading}
               >
-                {loading
-                  ? "Creating..."
-                  : "Start Chatting →"}
+                {loading ? "Creating..." : "Start Chatting →"}
               </button>
 
               <div className="login-hint">
-                Want the same profile
-                every day?
+                Want the same profile every day?
 
-                <button
-                  onClick={() =>
-                    setMode("signup")
-                  }
-                >
+                <button onClick={() => setMode("signup")}>
                   Create an account
                 </button>
               </div>
@@ -665,11 +556,7 @@ function ProfileScreen({
 
               <input
                 value={username}
-                onChange={(e) =>
-                  setUsername(
-                    e.target.value,
-                  )
-                }
+                onChange={(e) => setUsername(e.target.value)}
                 placeholder="Unique username"
                 autoComplete="username"
               />
@@ -678,11 +565,7 @@ function ProfileScreen({
 
               <input
                 value={password}
-                onChange={(e) =>
-                  setPassword(
-                    e.target.value,
-                  )
-                }
+                onChange={(e) => setPassword(e.target.value)}
                 type="password"
                 placeholder="At least 6 characters"
                 autoComplete="new-password"
@@ -694,9 +577,7 @@ function ProfileScreen({
 
                   <input
                     value={age}
-                    onChange={(e) =>
-                      setAge(e.target.value)
-                    }
+                    onChange={(e) => setAge(e.target.value)}
                     type="number"
                     min="13"
                     max="100"
@@ -709,19 +590,11 @@ function ProfileScreen({
 
                   <select
                     value={country}
-                    onChange={(e) =>
-                      setCountry(
-                        e.target.value,
-                      )
-                    }
+                    onChange={(e) => setCountry(e.target.value)}
                   >
-                    {countries.map(
-                      (item) => (
-                        <option key={item}>
-                          {item}
-                        </option>
-                      ),
-                    )}
+                    {countries.map((item) => (
+                      <option key={item}>{item}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -730,14 +603,10 @@ function ProfileScreen({
 
               <select
                 value={state}
-                onChange={(e) =>
-                  setState(e.target.value)
-                }
+                onChange={(e) => setState(e.target.value)}
               >
                 {states.map((item) => (
-                  <option key={item}>
-                    {item}
-                  </option>
+                  <option key={item}>{item}</option>
                 ))}
               </select>
 
@@ -748,73 +617,48 @@ function ProfileScreen({
                   <button
                     key={item.value}
                     className={`gender-choice ${
-                      gender === item.value
-                        ? "selected"
-                        : ""
-                    } ${genderColor(
-                      item.value,
-                    )}`}
-                    onClick={() =>
-                      setGender(
-                        item.value,
-                      )
-                    }
+                      gender === item.value ? "selected" : ""
+                    } ${genderColor(item.value)}`}
+                    onClick={() => setGender(item.value)}
                     type="button"
                   >
                     <span>
-                      {item.value ===
-                      "female"
+                      {item.value === "female"
                         ? "👩"
-                        : item.value ===
-                            "male"
+                        : item.value === "male"
                           ? "👨"
                           : "🧑"}
                     </span>
 
-                    {item.label.replace(
-                      /^[^\s]+\s/,
-                      "",
-                    )}
+                    {item.label.replace(/^[^\s]+\s/, "")}
                   </button>
                 ))}
               </div>
 
-              <label>
-                Choose your face
-              </label>
+              <label>Choose your face</label>
 
               <div className="avatar-grid">
-                {selectedAvatars.map(
-                  (item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      className={`avatar-select ${
-                        avatar === item
-                          ? "avatar-selected"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        setAvatar(item)
-                      }
-                    >
-                      <Avatar
-                        user={{
-                          avatar: item,
-                          gender,
-                        }}
-                        size="large"
-                      />
-                    </button>
-                  ),
-                )}
+                {selectedAvatars.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className={`avatar-select ${
+                      avatar === item ? "avatar-selected" : ""
+                    }`}
+                    onClick={() => setAvatar(item)}
+                  >
+                    <Avatar
+                      user={{
+                        avatar: item,
+                        gender,
+                      }}
+                      size="large"
+                    />
+                  </button>
+                ))}
               </div>
 
-              {error && (
-                <div className="error">
-                  {error}
-                </div>
-              )}
+              {error && <div className="error">{error}</div>}
 
               <button
                 className="primary-button big-button"
@@ -828,12 +672,9 @@ function ProfileScreen({
 
               <button
                 className="text-button"
-                onClick={() =>
-                  setMode("login")
-                }
+                onClick={() => setMode("login")}
               >
-                Already have an account?
-                Login
+                Already have an account? Login
               </button>
             </>
           )}
@@ -861,10 +702,7 @@ function UserCard({
       className="user-card"
       onClick={() => onOpen(user)}
     >
-      <Avatar
-        user={user}
-        size="normal"
-      />
+      <Avatar user={user} size="normal" />
 
       <div className="user-info">
         <div className="user-name">
@@ -878,15 +716,11 @@ function UserCard({
           <span>{flag(user.country)}</span>
           <span>{user.country}</span>
 
-          {user.state && (
-            <span>{user.state}</span>
-          )}
+          {user.state && <span>{user.state}</span>}
         </div>
       </div>
 
-      <div className="chat-arrow">
-        ›
-      </div>
+      <div className="chat-arrow">›</div>
     </button>
   );
 }
@@ -898,27 +732,18 @@ function UsersScreen({
   currentUser: UserProfile;
   onLogout: () => void;
 }) {
-  const [users, setUsers] =
-    useState<UserProfile[]>([]);
-
-  const [country, setCountry] =
-    useState("");
-
-  const [state, setState] =
-    useState("");
-
-  const [gender, setGender] =
-    useState("");
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [country, setCountry] = useState("");
+  const [state, setState] = useState("");
+  const [gender, setGender] = useState("");
 
   const [selectedUser, setSelectedUser] =
     useState<UserProfile | null>(null);
 
-  const [showProfile, setShowProfile] =
-    useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   async function loadUsers() {
-    const params =
-      new URLSearchParams();
+    const params = new URLSearchParams();
 
     if (country) {
       params.set("country", country);
@@ -933,12 +758,9 @@ function UsersScreen({
     }
 
     try {
-      const result =
-        await api<{
-          users: UserProfile[];
-        }>(
-          `/api/users?${params.toString()}`,
-        );
+      const result = await api<{
+        users: UserProfile[];
+      }>(`/api/users?${params.toString()}`);
 
       setUsers(result.users);
     } catch {
@@ -949,28 +771,17 @@ function UsersScreen({
   useEffect(() => {
     loadUsers();
 
-    const timer =
-      window.setInterval(
-        loadUsers,
-        5000,
-      );
+    const timer = window.setInterval(loadUsers, 5000);
 
-    return () =>
-      window.clearInterval(timer);
-  }, [
-    country,
-    state,
-    gender,
-  ]);
+    return () => window.clearInterval(timer);
+  }, [country, state, gender]);
 
   if (selectedUser) {
     return (
       <ChatScreen
         currentUser={currentUser}
         otherUser={selectedUser}
-        onBack={() =>
-          setSelectedUser(null)
-        }
+        onBack={() => setSelectedUser(null)}
       />
     );
   }
@@ -983,40 +794,24 @@ function UsersScreen({
         <div className="current-user">
           <button
             className="current-user-button"
-            onClick={() =>
-              setShowProfile(
-                !showProfile,
-              )
-            }
+            onClick={() => setShowProfile(!showProfile)}
           >
-            <Avatar
-              user={currentUser}
-              size="small"
-            />
+            <Avatar user={currentUser} size="small" />
 
-            <span>
-              {currentUser.username}
-            </span>
+            <span>{currentUser.username}</span>
           </button>
 
           {showProfile && (
             <div className="profile-menu">
               <div className="profile-menu-user">
-                <Avatar
-                  user={currentUser}
-                  size="normal"
-                />
+                <Avatar user={currentUser} size="normal" />
 
-                <strong>
-                  {currentUser.username}
-                </strong>
+                <strong>{currentUser.username}</strong>
               </div>
 
               <div className="profile-detail">
                 {currentUser.age} years •{" "}
-                {flag(
-                  currentUser.country,
-                )}{" "}
+                {flag(currentUser.country)}{" "}
                 {currentUser.country}
               </div>
 
@@ -1024,11 +819,7 @@ function UsersScreen({
                 {currentUser.state}
               </div>
 
-              <button
-                onClick={onLogout}
-              >
-                Logout
-              </button>
+              <button onClick={onLogout}>Logout</button>
             </div>
           )}
         </div>
@@ -1042,14 +833,11 @@ function UsersScreen({
               PEOPLE ONLINE
             </div>
 
-            <h1>
-              Who do you want to talk to?
-            </h1>
+            <h1>Who do you want to talk to?</h1>
 
             <p>
-              Find people from around the
-              world and start a private
-              conversation.
+              Find people from around the world and start a
+              private conversation.
             </p>
           </div>
         </div>
@@ -1057,104 +845,57 @@ function UsersScreen({
         <div className="filters">
           <select
             value={country}
-            onChange={(e) =>
-              setCountry(
-                e.target.value,
-              )
-            }
+            onChange={(e) => setCountry(e.target.value)}
           >
-            <option value="">
-              🌎 All countries
-            </option>
+            <option value="">🌎 All countries</option>
 
-            {countries.map(
-              (item) => (
-                <option key={item}>
-                  {item}
-                </option>
-              ),
-            )}
+            {countries.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
           </select>
 
           <select
             value={state}
-            onChange={(e) =>
-              setState(
-                e.target.value,
-              )
-            }
+            onChange={(e) => setState(e.target.value)}
           >
-            <option value="">
-              📍 All states / regions
-            </option>
+            <option value="">📍 All states / regions</option>
 
-            {states.map(
-              (item) => (
-                <option key={item}>
-                  {item}
-                </option>
-              ),
-            )}
+            {states.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
           </select>
 
           <select
             value={gender}
-            onChange={(e) =>
-              setGender(
-                e.target.value,
-              )
-            }
+            onChange={(e) => setGender(e.target.value)}
           >
-            <option value="">
-              👥 All genders
-            </option>
+            <option value="">👥 All genders</option>
 
-            <option value="female">
-              👩 Female
-            </option>
-
-            <option value="male">
-              👨 Male
-            </option>
-
-            <option value="neutral">
-              🧑 Neutral
-            </option>
+            <option value="female">👩 Female</option>
+            <option value="male">👨 Male</option>
+            <option value="neutral">🧑 Neutral</option>
           </select>
         </div>
 
         <div className="user-list">
-          {users.map(
-            (user) => (
-              <UserCard
-                key={user.id}
-                user={user}
-                currentUser={
-                  currentUser
-                }
-                onOpen={
-                  setSelectedUser
-                }
-              />
-            ),
-          )}
+          {users.map((user) => (
+            <UserCard
+              key={user.id}
+              user={user}
+              currentUser={currentUser}
+              onOpen={setSelectedUser}
+            />
+          ))}
 
           {users.filter(
-            (u) =>
-              u.id !==
-              currentUser.id,
+            (u) => u.id !== currentUser.id,
           ).length === 0 && (
             <div className="empty-users">
-              <div className="empty-icon">
-                👋
-              </div>
+              <div className="empty-icon">👋</div>
 
               <h3>No one found</h3>
 
-              <p>
-                Try changing the
-                filters.
-              </p>
+              <p>Try changing the filters.</p>
             </div>
           )}
         </div>
@@ -1172,30 +913,17 @@ function ChatScreen({
   otherUser: UserProfile;
   onBack: () => void;
 }) {
-  const roomId = [
-    currentUser.id,
-    otherUser.id,
-  ]
+  const roomId = [currentUser.id, otherUser.id]
     .sort()
     .join("-");
 
-  const [messages, setMessages] =
-    useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [text, setText] = useState("");
+  const [typing, setTyping] = useState(false);
+  const [blocked, setBlocked] = useState(false);
 
-  const [text, setText] =
-    useState("");
-
-  const [typing, setTyping] =
-    useState(false);
-
-  const [blocked, setBlocked] =
-    useState(false);
-
-  const bottomRef =
-    useRef<HTMLDivElement>(null);
-
-  const typingTimer =
-    useRef<number | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const typingTimer = useRef<number | null>(null);
 
   const socket = usePartySocket({
     party: "chat",
@@ -1203,24 +931,19 @@ function ChatScreen({
 
     onMessage: (event) => {
       try {
-        const message =
-          JSON.parse(
-            event.data as string,
-          ) as Message;
+        const message = JSON.parse(
+          event.data as string,
+        ) as Message;
 
         if (message.type === "all") {
-          setMessages(
-            message.messages,
-          );
+          setMessages(message.messages);
         }
 
         if (message.type === "add") {
           setMessages((old) => {
             if (
               old.some(
-                (item) =>
-                  item.id ===
-                  message.id,
+                (item) => item.id === message.id,
               )
             ) {
               return old;
@@ -1230,34 +953,20 @@ function ChatScreen({
               ...old,
               {
                 id: message.id,
-                content:
-                  message.content,
-                user:
-                  message.user,
-                role:
-                  message.role,
-                senderId:
-                  message.senderId,
-                image:
-                  message.image,
-                createdAt:
-                  message.createdAt,
+                content: message.content,
+                user: message.user,
+                role: message.role,
+                senderId: message.senderId,
+                image: message.image,
+                createdAt: message.createdAt,
               },
             ];
           });
         }
 
-        if (
-          message.type ===
-          "typing"
-        ) {
-          if (
-            message.userId ===
-            otherUser.id
-          ) {
-            setTyping(
-              message.typing,
-            );
+        if (message.type === "typing") {
+          if (message.userId === otherUser.id) {
+            setTyping(message.typing);
           }
         }
       } catch {
@@ -1267,53 +976,41 @@ function ChatScreen({
   });
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView(
-      {
-        behavior: "smooth",
-      },
-    );
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
   }, [messages]);
 
-  function sendTyping(
-    value: string,
-  ) {
+  function sendTyping(value: string) {
     setText(value);
 
     socket.send(
       JSON.stringify({
         type: "typing",
-        userId:
-          currentUser.id,
-        username:
-          currentUser.username,
+        userId: currentUser.id,
+        username: currentUser.username,
         typing: true,
       }),
     );
 
     if (typingTimer.current) {
-      window.clearTimeout(
-        typingTimer.current,
-      );
+      window.clearTimeout(typingTimer.current);
     }
 
-    typingTimer.current =
-      window.setTimeout(() => {
-        socket.send(
-          JSON.stringify({
-            type: "typing",
-            userId:
-              currentUser.id,
-            username:
-              currentUser.username,
-            typing: false,
-          }),
-        );
-      }, 900);
+    typingTimer.current = window.setTimeout(() => {
+      socket.send(
+        JSON.stringify({
+          type: "typing",
+          userId: currentUser.id,
+          username: currentUser.username,
+          typing: false,
+        }),
+      );
+    }, 900);
   }
 
   function sendMessage() {
-    const content =
-      text.trim();
+    const content = text.trim();
 
     if (!content || blocked) {
       return;
@@ -1322,18 +1019,13 @@ function ChatScreen({
     const message: ChatMessage = {
       id: nanoid(12),
       content,
-      user:
-        currentUser.username,
+      user: currentUser.username,
       role: "user",
-      senderId:
-        currentUser.id,
+      senderId: currentUser.id,
       createdAt: Date.now(),
     };
 
-    setMessages((old) => [
-      ...old,
-      message,
-    ]);
+    setMessages((old) => [...old, message]);
 
     socket.send(
       JSON.stringify({
@@ -1346,34 +1038,26 @@ function ChatScreen({
   }
 
   async function block() {
-    const confirmed =
-      window.confirm(
-        `Block ${otherUser.username}? They won't be able to contact you.`,
-      );
+    const confirmed = window.confirm(
+      `Block ${otherUser.username}? They won't be able to contact you.`,
+    );
 
     if (!confirmed) {
       return;
     }
 
     try {
-      await api(
-        "/api/block",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            blockerId:
-              currentUser.id,
-            blockedId:
-              otherUser.id,
-          }),
-        },
-      );
+      await api("/api/block", {
+        method: "POST",
+        body: JSON.stringify({
+          blockerId: currentUser.id,
+          blockedId: otherUser.id,
+        }),
+      });
 
       setBlocked(true);
     } catch {
-      alert(
-        "Unable to block this user right now.",
-      );
+      alert("Unable to block this user right now.");
     }
   }
 
@@ -1387,26 +1071,16 @@ function ChatScreen({
           ←
         </button>
 
-        <Avatar
-          user={otherUser}
-          size="small"
-        />
+        <Avatar user={otherUser} size="small" />
 
         <div className="chat-user-details">
-          <strong>
-            {otherUser.username}
-          </strong>
+          <strong>{otherUser.username}</strong>
 
           <span>
             <span className="online-dot" />
-
-            Online •{" "}
-            {otherUser.age} •{" "}
-            {flag(
-              otherUser.country,
-            )}{" "}
-            {otherUser.country}{" "}
-            {otherUser.state}
+            Online • {otherUser.age} •{" "}
+            {flag(otherUser.country)}{" "}
+            {otherUser.country} {otherUser.state}
           </span>
         </div>
 
@@ -1421,94 +1095,72 @@ function ChatScreen({
       <main className="chat-messages">
         {messages.length === 0 && (
           <div className="chat-start">
-            <Avatar
-              user={otherUser}
-              size="large"
-            />
+            <Avatar user={otherUser} size="large" />
 
             <h2>
-              Say hello to{" "}
-              {otherUser.username} 👋
+              Say hello to {otherUser.username} 👋
             </h2>
 
             <p>
-              This is a private
-              one-to-one conversation.
+              This is a private one-to-one conversation.
             </p>
           </div>
         )}
 
-        {messages.map(
-          (message) => {
-            const mine =
-              message.senderId ===
-                currentUser.id ||
-              message.user ===
-                currentUser.username;
+        {messages.map((message) => {
+          const mine =
+            message.senderId === currentUser.id ||
+            message.user === currentUser.username;
 
-            return (
+          return (
+            <div
+              key={message.id}
+              className={`message-row ${
+                mine ? "mine" : "theirs"
+              }`}
+            >
+              {!mine && (
+                <Avatar
+                  user={otherUser}
+                  size="small"
+                />
+              )}
+
               <div
-                key={message.id}
-                className={`message-row ${
-                  mine
-                    ? "mine"
-                    : "theirs"
+                className={`bubble ${
+                  mine ? "mine" : "theirs"
                 }`}
               >
-                {!mine && (
-                  <Avatar
-                    user={otherUser}
-                    size="small"
+                {message.image && (
+                  <img
+                    src={message.image}
+                    alt="Shared"
+                    className="shared-image"
                   />
                 )}
 
-                <div
-                  className={`bubble ${
-                    mine
-                      ? "mine"
-                      : "theirs"
-                  }`}
-                >
-                  {message.image && (
-                    <img
-                      src={
-                        message.image
-                      }
-                      alt="Shared"
-                      className="shared-image"
-                    />
-                  )}
+                {message.content && (
+                  <div>{message.content}</div>
+                )}
 
-                  {message.content && (
-                    <div>
-                      {message.content}
-                    </div>
-                  )}
-
-                  <span className="message-time">
-                    {message.createdAt
-                      ? new Date(
-                          message.createdAt,
-                        ).toLocaleTimeString(
-                          [],
-                          {
-                            hour: "2-digit",
-                            minute:
-                              "2-digit",
-                          },
-                        )
-                      : ""}
-                  </span>
-                </div>
+                <span className="message-time">
+                  {message.createdAt
+                    ? new Date(
+                        message.createdAt,
+                      ).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : ""}
+                </span>
               </div>
-            );
-          },
-        )}
+            </div>
+          );
+        })}
 
         {typing && (
           <div className="typing">
-            {otherUser.username} is
-            typing...
+            {otherUser.username} is typing...
           </div>
         )}
 
@@ -1517,8 +1169,7 @@ function ChatScreen({
 
       {blocked ? (
         <div className="blocked-bar">
-          🚫 You blocked{" "}
-          {otherUser.username}.
+          🚫 You blocked {otherUser.username}.
         </div>
       ) : (
         <form
@@ -1544,9 +1195,7 @@ function ChatScreen({
           <input
             value={text}
             onChange={(e) =>
-              sendTyping(
-                e.target.value,
-              )
+              sendTyping(e.target.value)
             }
             placeholder={`Message ${otherUser.username}...`}
             autoComplete="off"
@@ -1566,24 +1215,15 @@ function ChatScreen({
 
 function App() {
   const [user, setUser] =
-    useState<UserProfile | null>(
-      () => loadUser(),
-    );
+    useState<UserProfile | null>(() => loadUser());
 
   function logout() {
-    localStorage.removeItem(
-      USER_KEY,
-    );
-
+    localStorage.removeItem(USER_KEY);
     setUser(null);
   }
 
   if (!user) {
-    return (
-      <ProfileScreen
-        onComplete={setUser}
-      />
-    );
+    return <ProfileScreen onComplete={setUser} />;
   }
 
   return (
@@ -1594,11 +1234,14 @@ function App() {
   );
 }
 
-createRoot(
-  document.getElementById("root")!,
-).render(
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+createRoot(rootElement).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 );
-```
