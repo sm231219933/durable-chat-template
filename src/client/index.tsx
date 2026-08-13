@@ -164,11 +164,8 @@ function Avatar({
 }) {
   const colorClass = genderColor(user.gender);
 
-  const avatarClass = [
-    "avatar",
-    `avatar-${colorClass}`,
-    `avatar-${size}`,
-  ].join(" ");
+  const avatarClass =
+    `avatar avatar-${colorClass} avatar-${size}`;
 
   const emoji = avatarEmoji(
     user.avatar,
@@ -179,7 +176,6 @@ function Avatar({
     <div
       className={avatarClass}
       title={user.gender}
-      aria-label={`${user.gender} avatar`}
     >
       {emoji}
     </div>
